@@ -1,0 +1,11 @@
+name = "naturlust-trail-guide-relay"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Vor dem ersten Deploy einmalig anlegen:
+#   npx wrangler kv namespace create LOCATION_KV
+# und die von diesem Befehl ausgegebene "id" hier eintragen.
+# Kopiere diese Datei danach nach wrangler.toml (wird nicht versioniert).
+[[kv_namespaces]]
+binding = "LOCATION_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"

@@ -1,0 +1,19 @@
+{
+  "name": "naturlust-trail-guide-relay",
+  "description": "Minimaler Cloudflare-Worker-Relay fuer den sicheren, zeitlich befristeten Live-Standort-Link von NaturlustTrailGuide.",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.118.0",
+    "@cloudflare/workers-types": "^5.20260801.1",
+    "typescript": "~5.6.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "workerd@1.20260730.1": true
+  }
+}

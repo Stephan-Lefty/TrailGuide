@@ -1,0 +1,53 @@
+{
+  "name": "naturlust-trail-guide",
+  "description": "NaturlustTrailGuide (NTG) - Sicherheits-App fuer Wanderer und Bergsteiger mit Standort-Tracking und Notruf-Funktion.",
+  "private": true,
+  "version": "0.1.0",
+  "main": "expo-router/entry",
+  "dependencies": {
+    "@turf/boolean-point-in-polygon": "^7.3.5",
+    "@turf/helpers": "^7.3.5",
+    "expo": "~57.0.9",
+    "expo-constants": "~57.0.8",
+    "expo-contacts": "~57.0.3",
+    "expo-crypto": "~57.0.1",
+    "expo-file-system": "~57.0.1",
+    "expo-linking": "~57.0.4",
+    "expo-localization": "~57.0.1",
+    "expo-location": "~57.0.7",
+    "expo-mail-composer": "~57.0.1",
+    "expo-router": "~57.0.9",
+    "expo-sharing": "~57.0.8",
+    "expo-sqlite": "~57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "expo-task-manager": "~57.0.7",
+    "i18next": "^26.3.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-i18next": "^17.0.11",
+    "react-native": "0.86.2",
+    "react-native-mmkv": "^4.3.2",
+    "react-native-nitro-modules": "^0.36.5",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-web": "^0.21.2"
+  },
+  "devDependencies": {
+    "@react-native/jest-preset": "^0.86.2",
+    "@types/jest": "29.5.14",
+    "@types/react": "~19.2.2",
+    "jest": "~29.7.0",
+    "jest-expo": "~57.0.3",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  }
+}

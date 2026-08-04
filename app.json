@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "NaturlustTrailGuide",
+    "slug": "naturlust-trail-guide",
+    "scheme": "naturlusttrailguide",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "net.naturlust.trailguide",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "NaturlustTrailGuide zeigt deinen Standort waehrend der Aktivitaet an und erkennt, in welchem Land du dich befindest, um die richtige Notrufnummer anzuzeigen.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "NaturlustTrailGuide kann deinen Standort auch bei gesperrtem Bildschirm tracken, damit im Notfall dein letzter bekannter Standort geteilt werden kann.",
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ],
+        "LSApplicationQueriesSchemes": [
+          "whatsapp"
+        ]
+      }
+    },
+    "android": {
+      "package": "net.naturlust.trailguide",
+      "adaptiveIcon": {
+        "backgroundColor": "#2c4a2f",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "NaturlustTrailGuide kann deinen Standort auch bei gesperrtem Bildschirm tracken, damit im Notfall dein letzter bekannter Standort geteilt werden kann.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      "expo-sqlite",
+      "expo-localization",
+      "./plugins/withWhatsAppQuery",
+      "expo-mail-composer",
+      "expo-sharing"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
