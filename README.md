@@ -1,4 +1,4 @@
-[Deutsch](README.md) | [English](README.en.md) | [Änderungsprotokoll](#änderungsprotokoll)
+[Deutsch](README.md) | [English](README.en.md) | [Änderungsprotokoll](#änderungsprotokoll) | [Wichtiger Hinweis](#wichtiger-hinweis)
 
 # NaturlustTrailGuide (NTG)
 
