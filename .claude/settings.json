@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"/mnt/raid/eigene Daten/GitHub/Stephan-Lefty/NaturlustTrailGuide\" && git fetch --quiet >/dev/null 2>&1; BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); BEHIND=$(git rev-list --count HEAD..origin/$BRANCH 2>/dev/null || echo 0); if [ \"$BEHIND\" -gt 0 ]; then git pull --quiet >/dev/null 2>&1 && printf '{\"systemMessage\": \"Pulled %s new commit(s) from GitHub - working on the latest state now.\"}\\n' \"$BEHIND\" || printf '{\"systemMessage\": \"git pull failed - check for local changes or conflicts before continuing.\"}\\n'; else printf '{\"systemMessage\": \"Already up to date with GitHub (%s).\"}\\n' \"$BRANCH\"; fi",
+            "timeout": 30,
+            "statusMessage": "Checking for updates from GitHub..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"/mnt/raid/eigene Daten/GitHub/Stephan-Lefty/NaturlustTrailGuide\" && git fetch --quiet >/dev/null 2>&1; BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); DIRTY=$(git status --porcelain 2>/dev/null); AHEAD=$(git rev-list --count origin/$BRANCH..HEAD 2>/dev/null || echo 0); if [ -n \"$DIRTY\" ] || [ \"$AHEAD\" -gt 0 ]; then printf '{\"systemMessage\": \"Reminder: uncommitted changes or %s unpushed commit(s) in NaturlustTrailGuide - commit and git push before switching computers.\"}\\n' \"$AHEAD\"; else printf '{\"systemMessage\": \"Everything committed and pushed - the other computer can pull safely.\"}\\n'; fi",
+            "timeout": 30,
+            "statusMessage": "Checking git status..."
+          }
+        ]
+      }
+    ]
+  }
+}
