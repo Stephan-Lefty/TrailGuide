@@ -1,6 +1,6 @@
-# NaturlustTrailGuide (NTG)
+[Deutsch](README.md) | [English](README.en.md) | [Changelog](#changelog)
 
-🇩🇪 [Auf Deutsch lesen](README.md)
+# NaturlustTrailGuide (NTG)
 
 **Your safety on the go. Your data stays yours.**
 
@@ -60,6 +60,23 @@ npx wrangler kv namespace create LOCATION_KV   # enter the id in wrangler.toml
 npm run dev              # local development
 npm run deploy           # deploy to Cloudflare
 ```
+
+## Changelog
+
+Refers to the app's version number (`app.json`/`package.json`).
+
+### 0.1.0
+Initial version:
+- Background location tracking during an active activity, automatic deletion of all location data when an activity ends normally.
+- SOS screen: 112 always available, automatic offline country detection with country-specific mountain rescue number (AT, CH, SK, PL, CZ, IT, ES, BG), manual country override for border regions (Austria/Switzerland).
+- 5-second hold gesture for emergency calls, protects against accidental calls.
+- Collapsible key-questions checklist for the emergency call.
+- Permanent emergency contacts (max. 2, at least one required) plus an optional contact just for the current activity, can be picked directly from the address book.
+- Share location as a one-time link or as a continuously updating live location link via a self-hosted Cloudflare Worker relay.
+- "My activities": overview of all outings with retained data (after an incident), GPX export by mail or via the share sheet, delete individually or all at once.
+- "App info" with contact details and a link to the project page.
+- "Reset app to factory state" for a clean restart.
+- German and English, based on device language.
 
 ## Important note
 

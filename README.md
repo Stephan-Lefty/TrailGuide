@@ -1,6 +1,6 @@
-# NaturlustTrailGuide (NTG)
+[Deutsch](README.md) | [English](README.en.md) | [Änderungsprotokoll](#änderungsprotokoll)
 
-🇬🇧 [Read this in English](README.en.md)
+# NaturlustTrailGuide (NTG)
 
 **Deine Sicherheit unterwegs. Deine Daten bleiben deine.**
 
@@ -60,6 +60,23 @@ npx wrangler kv namespace create LOCATION_KV   # ID in wrangler.toml eintragen
 npm run dev              # lokale Entwicklung
 npm run deploy           # Deployment zu Cloudflare
 ```
+
+## Änderungsprotokoll
+
+Bezieht sich auf die Versionsnummer der App (`app.json`/`package.json`).
+
+### 0.1.0
+Erste Version:
+- Standort-Tracking im Hintergrund während einer aktiven Aktivität, automatische Löschung aller Standortdaten bei normalem Tourende.
+- SOS-Screen: 112 immer verfügbar, automatische offline Ländererkennung mit länderspezifischer Bergrettungsnummer (AT, CH, SK, PL, CZ, IT, ES, BG), manuelle Länderauswahl für Grenzregionen (Österreich/Schweiz).
+- Halten-Geste (5 Sekunden) für Notrufe, schützt vor Fehlbedienung.
+- Aufklappbare W-Fragen-Checkliste für den Notruf.
+- Dauerhafte Notfallkontakte (max. 2, mindestens einer Pflicht) plus ein optionaler Kontakt nur für die aktuelle Tour, Auswahl auch direkt aus dem Adressbuch.
+- Standort teilen als einmaliger Link oder als laufend aktualisierter Live-Standort-Link über einen selbst gehosteten Cloudflare-Worker-Relay.
+- "Meine Aktivitäten": Übersicht aller Touren mit erhaltenen Daten (nach einem Vorfall), GPX-Export per Mail oder Teilen-Funktion, einzelnes oder komplettes Löschen.
+- "Infos zur App" mit Kontaktangaben und Link zur Projektseite.
+- Funktion "App in Werkszustand zurücksetzen" für einen sauberen Neustart.
+- Deutsch und Englisch, automatisch nach Gerätesprache.
 
 ## Wichtiger Hinweis
 
