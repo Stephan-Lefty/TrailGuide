@@ -84,6 +84,10 @@ NaturlustTrailGuide is a private project and does not replace official emergency
 
 This app was built together with Claude.ai.
 
+## Privacy
+
+See [PRIVACY.en.md](PRIVACY.en.md) for the privacy policy.
+
 ## License
 
 [MIT](LICENSE) – Stephan Rösner ([Naturlust.net](https://naturlust.net))

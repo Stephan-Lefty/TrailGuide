@@ -84,6 +84,10 @@ NaturlustTrailGuide ist ein privates Projekt und ersetzt keine offiziellen Notfa
 
 Diese App wurde zusammen mit Claude.ai entwickelt.
 
+## Datenschutz
+
+Siehe [PRIVACY.md](PRIVACY.md) für die Datenschutzerklärung.
+
 ## Lizenz
 
 [MIT](LICENSE) – Stephan Rösner ([Naturlust.net](https://naturlust.net))

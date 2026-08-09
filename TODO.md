@@ -5,7 +5,8 @@ Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
 ## Play-Store-Veröffentlichung
 
 - [x] Echten Release-Keystore erzeugen und Signierung umstellen (statt Debug-Keystore)
-- [ ] Datenschutzerklärung schreiben und unter einer festen URL veröffentlichen (z.B. auf naturlust.net)
+- [x] Datenschutzerklärung schreiben ([PRIVACY.md](PRIVACY.md)/[PRIVACY.en.md](PRIVACY.en.md))
+- [ ] Datenschutzerklärung zusätzlich unter einer festen URL auf naturlust.net veröffentlichen (für das Play-Console-Formular, das eine URL verlangt - Link zur GitHub-Datei reicht evtl. auch, aber eine eigene Seite ist sauberer)
 - [ ] Google Play Console: App anlegen, Data-Safety-Formular ausfüllen
 - [ ] Google Play Console: Formular/Nachweis für Hintergrund-Standortzugriff ("Prominent Disclosure") einreichen, inkl. Demo-Video
 - [ ] Store-Listing: Kurzbeschreibung, Langbeschreibung, Content-Rating-Fragebogen
