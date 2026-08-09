@@ -9,7 +9,8 @@ Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
 - [x] Datenschutzerklärung unter fester URL veröffentlicht: https://naturlust.net/trailguide-app-datenschutz/
 - [ ] Google Play Console: App anlegen, Data-Safety-Formular ausfüllen (Ausfüllhilfe: [docs/play-store-data-safety.md](docs/play-store-data-safety.md))
 - [ ] Google Play Console: Formular/Nachweis für Hintergrund-Standortzugriff ("Prominent Disclosure") einreichen, inkl. Demo-Video
-- [ ] Store-Listing: Kurzbeschreibung, Langbeschreibung, Content-Rating-Fragebogen
+- [x] Store-Listing-Texte geschrieben ([docs/play-store-listing.md](docs/play-store-listing.md)): Kurz- und Langbeschreibung, fertig zum Reinkopieren
+- [ ] Store-Listing-Texte in Play Console eintragen, Content-Rating-Fragebogen ausfüllen
 - [ ] Store-Screenshots im korrekten Format prüfen/anpassen (Play Store verlangt bestimmte Seitenverhältnisse)
 - [ ] Version auf 1.0.0 anheben (app.json + package.json), sobald alles andere steht
 
