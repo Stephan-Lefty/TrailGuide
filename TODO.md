@@ -11,7 +11,7 @@ Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
 - [ ] Google Play Console: Formular/Nachweis für Hintergrund-Standortzugriff ("Prominent Disclosure") einreichen, inkl. Demo-Video
 - [x] Store-Listing-Texte geschrieben ([docs/play-store-listing.md](docs/play-store-listing.md)): Kurz- und Langbeschreibung, fertig zum Reinkopieren
 - [ ] Store-Listing-Texte in Play Console eintragen, Content-Rating-Fragebogen ausfüllen
-- [ ] Store-Screenshots im korrekten Format prüfen/anpassen (Play Store verlangt bestimmte Seitenverhältnisse)
+- [x] Store-Screenshots fürs Play-Store-Format angepasst (Original-Screenshots hatten 2.23:1, Play Store erlaubt max. 2:1) - fertige Versionen liegen unter [screenshots/playstore/](screenshots/playstore/)
 - [ ] Version auf 1.0.0 anheben (app.json + package.json), sobald alles andere steht
 
 ## Qualitätssicherung
