@@ -8,7 +8,12 @@ Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
 - [x] Datenschutzerklärung schreiben ([PRIVACY.md](PRIVACY.md)/[PRIVACY.en.md](PRIVACY.en.md))
 - [x] Datenschutzerklärung unter fester URL veröffentlicht: https://naturlust.net/trailguide-app-datenschutz/
 - [x] Google Play Console: App angelegt
-- [ ] Google Play Console: Geschlossenen Test starten – Pflicht für neue Entwicklerkonten, bevor Produktionszugriff möglich ist. Braucht mind. 12 Tester (Opt-in-Link verschicken, z.B. an Familie/Freunde) und muss mind. 14 Tage laufen, bevor "Produktionszugriff beantragen" freigeschaltet wird. Am besten früh anstoßen, da die 14 Tage parallel zu den anderen Schritten laufen können.
+- [ ] Google Play Console: Geschlossenen Test starten – Pflicht für neue Entwicklerkonten, bevor Produktionszugriff möglich ist. Braucht mind. 12 Tester und muss mind. 14 Tage laufen, bevor "Produktionszugriff beantragen" freigeschaltet wird.
+  - [x] Länder/Regionen für den Test festgelegt
+  - [x] Facebook-Aufruf für Tester gestartet, Interessenten bewerben sich per Mail an info@naturlust.net
+  - [ ] Warten bis mind. 12 Tester-Mailadressen zusammen sind, dann in der E-Mail-Liste in Play Console eintragen
+  - [ ] Release erstellen/hochladen, Opt-in-Link an die Tester verschicken
+  - [ ] 14-Tage-Frist abwarten, dann Produktionszugriff beantragen
 - [x] Google Play Console: Alle App-Inhalte-Deklarationen abgeschlossen (Datenschutzerklärung, Anmeldedaten, Anzeigen, Altersfreigaben/IARC, Zielgruppe, Datensicherheit, Behörden-Apps, Finanzfunktionen, Werbe-ID, Gesundheits-Apps)
 - [ ] Google Play Console: Formular/Nachweis für Hintergrund-Standortzugriff ("Prominent Disclosure") einreichen, inkl. Demo-Video
 - [x] Store-Listing-Texte geschrieben ([docs/play-store-listing.md](docs/play-store-listing.md)): Kurz- und Langbeschreibung, fertig zum Reinkopieren
