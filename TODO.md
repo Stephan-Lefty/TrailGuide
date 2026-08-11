@@ -9,7 +9,7 @@ Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
 - [x] Datenschutzerklärung unter fester URL veröffentlicht: https://naturlust.net/trailguide-app-datenschutz/
 - [x] Google Play Console: App angelegt
 - [ ] Google Play Console: Geschlossenen Test starten – Pflicht für neue Entwicklerkonten, bevor Produktionszugriff möglich ist. Braucht mind. 12 Tester (Opt-in-Link verschicken, z.B. an Familie/Freunde) und muss mind. 14 Tage laufen, bevor "Produktionszugriff beantragen" freigeschaltet wird. Am besten früh anstoßen, da die 14 Tage parallel zu den anderen Schritten laufen können.
-- [ ] Google Play Console: App-Informationen/Store-Eintrag ausfüllen, Data-Safety-Formular ausfüllen (Ausfüllhilfe: [docs/play-store-data-safety.md](docs/play-store-data-safety.md))
+- [x] Google Play Console: Alle App-Inhalte-Deklarationen abgeschlossen (Datenschutzerklärung, Anmeldedaten, Anzeigen, Altersfreigaben/IARC, Zielgruppe, Datensicherheit, Behörden-Apps, Finanzfunktionen, Werbe-ID, Gesundheits-Apps)
 - [ ] Google Play Console: Formular/Nachweis für Hintergrund-Standortzugriff ("Prominent Disclosure") einreichen, inkl. Demo-Video
 - [x] Store-Listing-Texte geschrieben ([docs/play-store-listing.md](docs/play-store-listing.md)): Kurz- und Langbeschreibung, fertig zum Reinkopieren
 - [ ] Store-Listing-Texte in Play Console eintragen, Content-Rating-Fragebogen ausfüllen
