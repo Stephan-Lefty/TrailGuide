@@ -50,12 +50,10 @@ export default function StartHikeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.titleRow}>
-        <Text style={styles.title}>{t('hike.tourContactTitle')}</Text>
-        <Pressable onPress={handlePickContact} hitSlop={8}>
-          <Text style={styles.pickContactLink}>{t('onboarding.pickFromContacts')}</Text>
-        </Pressable>
-      </View>
+      <Text style={styles.title}>{t('hike.tourContactTitle')}</Text>
+      <Pressable onPress={handlePickContact} hitSlop={8} style={styles.pickContactRow}>
+        <Text style={styles.pickContactLink}>{t('onboarding.pickFromContacts')}</Text>
+      </Pressable>
       <Text style={styles.hint}>{t('hike.tourContactHint')}</Text>
 
       <TextInput
@@ -88,17 +86,15 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 32,
   },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
   title: {
     fontFamily: fontFamily.serif,
     fontSize: fontSize.large,
     color: semanticColors.textPrimary,
-    flexShrink: 1,
+    marginBottom: 4,
+  },
+  pickContactRow: {
+    alignSelf: 'flex-start',
+    marginBottom: 12,
   },
   pickContactLink: {
     fontFamily: fontFamily.sans,
