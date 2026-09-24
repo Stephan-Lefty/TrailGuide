@@ -16,9 +16,10 @@ Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
   - [ ] Release erstellen/hochladen, Opt-in-Link an die Tester verschicken
   - [ ] 14-Tage-Frist abwarten, dann Produktionszugriff beantragen
 - [ ] Institutionelle Kontakte für Unterstützung/Reichweite angeschrieben (Details: [[project_trailguide_oeav_kontakt]] in Claudes Memory)
-  - Manuel Reindl (ÖAV, Abteilung Bergsport): sehr interessiert, Gesprächstermin 24.09.2026, 9:00 Uhr
+  - Manuel Reindl (ÖAV, Abteilung Bergsport): sehr interessiert, Gesprächstermin 24.09.2026, 20:30 Uhr (Videocall)
   - Bernd Noggler (Geschäftsführer Leitstelle Tirol): wies auf offizielle, seit 2018 etablierte App "SOS-EU-ALP" hin (direkt an Leitstelle angebunden); Stephan hat Datenschutz als Hauptunterschied herausgestellt (TrailGuide speichert standardmäßig nichts ohne Vorfall) und um Einschätzung/Unterstützung gebeten, Antwort steht noch aus
   - DAV und Bergrettung Tirol per Mail angeschrieben, bisher keine Rückmeldung
+  - [x] Präsentation für das ÖAV-Gespräch erstellt: aktuelle Screenshots (mit Erklärungen) + Vergleich zu SOS-EU-ALP als PDF im Querformat, liegt unter `~/Schreibtisch/TrailGuide-Screenshots-OeAV/NaturlustTrailGuide_Praesentation_OeAV.pdf`
 - [x] Google Play Console: Alle App-Inhalte-Deklarationen abgeschlossen (Datenschutzerklärung, Anmeldedaten, Anzeigen, Altersfreigaben/IARC, Zielgruppe, Datensicherheit, Behörden-Apps, Finanzfunktionen, Werbe-ID, Gesundheits-Apps)
 - [ ] Google Play Console: Formular/Nachweis für Hintergrund-Standortzugriff ("Prominent Disclosure") einreichen, inkl. Demo-Video
 - [x] Store-Listing-Texte geschrieben ([docs/play-store-listing.md](docs/play-store-listing.md)): Kurz- und Langbeschreibung, fertig zum Reinkopieren
