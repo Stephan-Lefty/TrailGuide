@@ -3,7 +3,7 @@
     "name": "NaturlustTrailGuide",
     "slug": "naturlust-trail-guide",
     "scheme": "naturlusttrailguide",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -25,6 +25,7 @@
     },
     "android": {
       "package": "net.naturlust.trailguide",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#2c4a2f",
         "foregroundImage": "./assets/android-icon-foreground.png",

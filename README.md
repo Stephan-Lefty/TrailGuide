@@ -23,6 +23,9 @@ Startest du eine Aktivität, zeichnet die App im Hintergrund deinen Standort auf
 - **Standort teilen**: Einmaliger Standort-Link oder ein laufend aktualisierter Live-Standort-Link über einen eigenen Relay-Server.
 - **GPX-Export**: Aufgezeichnete Wegpunkte bei Vorfällen lassen sich als GPX-Datei per Mail versenden oder über beliebige Apps teilen.
 - **SOS erst nach Tour-Start**: Der Notfall-Zugang ist gesperrt, solange keine Aktivität läuft – schließt versehentliche Notrufe aus.
+- **Akku-Warnung**: Fällt der Akkustand während einer aktiven Tour unter 15%, meldet sich die App mit Ton.
+- **Netz-wieder-da-Hinweis**: Nach einem Verbindungsverlust erinnert ein Hinweis mit Ton daran, sobald wieder Empfang da ist.
+- **Neustart-Erinnerung**: Wurde das Gerät während einer laufenden Aktivität neu gestartet, erinnert eine Benachrichtigung daran, die App wieder zu öffnen und das Tracking fortzusetzen.
 - **Mehrsprachig**: Deutsch/Englisch, automatisch nach Gerätesprache.
 
 ## Screenshots
@@ -64,6 +67,13 @@ npm run deploy           # Deployment zu Cloudflare
 ## Änderungsprotokoll
 
 Bezieht sich auf die Versionsnummer der App (`app.json`/`package.json`).
+
+### 1.0.0
+Erste öffentliche Version, angeregt durch das Gespräch mit dem Österreichischen Alpenverein (Abteilung Bergsport):
+- Akku-Warnung während einer aktiven Tour, sobald der Akkustand unter 15% fällt (mit Ton).
+- Hinweis mit Ton, sobald nach einem Verbindungsverlust wieder Netzempfang verfügbar ist.
+- Erinnerung nach einem Geräte-Neustart, falls dabei noch eine Aktivität lief – die App muss danach manuell wieder geöffnet werden, um das Tracking fortzusetzen (bewusst kein automatischer Neustart im Hintergrund, um zusätzliche, sensible Berechtigungen zu vermeiden).
+- Fehlerbehebung: Fand die App beim Start eine bereits laufende Aktivität vor (z.B. nach einem Geräte-Neustart), wurde das Standort-Tracking bisher nicht automatisch fortgesetzt.
 
 ### 0.1.0
 Erste Version:

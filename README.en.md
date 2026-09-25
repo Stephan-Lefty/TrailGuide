@@ -23,6 +23,9 @@ Start an activity and the app records your location in the background — even w
 - **Share location**: A one-time location link, or a continuously updating live location link via a self-hosted relay server.
 - **GPX export**: Recorded track points from incidents can be emailed as a GPX file or shared via any app.
 - **SOS only after starting an activity**: The emergency access is locked until an activity is running — rules out accidental emergency calls.
+- **Low-battery warning**: If the battery drops below 15% during an active activity, the app alerts you with sound.
+- **Connection-restored alert**: After a connection loss, an alert with sound lets you know as soon as signal is back.
+- **Restart reminder**: If the device restarted while an activity was still running, a notification reminds you to reopen the app to resume tracking.
 - **Multilingual**: German/English, based on device language.
 
 ## Screenshots
@@ -64,6 +67,13 @@ npm run deploy           # deploy to Cloudflare
 ## Changelog
 
 Refers to the app's version number (`app.json`/`package.json`).
+
+### 1.0.0
+First public version, prompted by the conversation with the Austrian Alpine Club (mountain sports department):
+- Low-battery warning during an active activity once the battery drops below 15% (with sound).
+- Connection-restored alert with sound as soon as signal comes back after a connection loss.
+- Reminder after a device restart if an activity was still running — the app must be reopened manually afterward to resume tracking (deliberately no automatic background restart, to avoid an additional, sensitive permission).
+- Bug fix: if the app found an already-running activity on launch (e.g. after a device restart), location tracking itself was not resumed automatically.
 
 ### 0.1.0
 Initial version:
