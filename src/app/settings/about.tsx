@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -10,6 +11,7 @@ const MORE_INFO_URL = 'https://naturlust.net/trailguide-app/';
 export default function SettingsAboutScreen() {
   const { t } = useTranslation();
   const year = new Date().getFullYear();
+  const appVersion = Constants.expoConfig?.version ?? '?';
 
   return (
     <View style={styles.container}>
@@ -30,7 +32,10 @@ export default function SettingsAboutScreen() {
 
         <Text style={styles.notice}>{t('settingsAbout.notice')}</Text>
       </View>
-      <Text style={styles.copyright}>{t('settingsAbout.copyright', { year })}</Text>
+      <View>
+        <Text style={styles.version}>{t('settingsAbout.version', { version: appVersion })}</Text>
+        <Text style={styles.copyright}>{t('settingsAbout.copyright', { year })}</Text>
+      </View>
     </View>
   );
 }
@@ -84,6 +89,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.medium,
     color: semanticColors.textPrimary,
     lineHeight: 22,
+  },
+  version: {
+    fontFamily: fontFamily.sans,
+    fontSize: fontSize.small,
+    color: semanticColors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 4,
   },
   copyright: {
     fontFamily: fontFamily.sans,

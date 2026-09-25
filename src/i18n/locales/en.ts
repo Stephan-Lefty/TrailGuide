@@ -137,6 +137,7 @@ export const en: typeof de = {
       'If you would like more information about this app in German, tap the link below. There you can also use a contact form to send questions, problems, and suggestions to the team:',
     notice:
       'Note: This app was created together with Claude.ai. No legal claims can be made against the creator arising from the use of this app. Use entirely at your own risk.',
+    version: 'Version {{version}}',
     copyright: '© {{year}} Naturlust.net',
   },
   settingsContacts: {

@@ -135,6 +135,7 @@ export const de = {
       'Wenn du weitere Informationen zu dieser App auf Deutsch möchtest, dann klicke auf den folgenden Link. Dort kannst du auch ein Kontaktformular nutzen, um Fragen, Probleme und Anregungen an das Team zu senden:',
     notice:
       'Hinweis: Die App wurde zusammen mit Claude.ai erstellt. Aus der Nutzung können gegenüber dem Urheber keine rechtlichen Ansprüche geltend gemacht werden. Nutzung ausschließlich auf eigene Gefahr.',
+    version: 'Version {{version}}',
     copyright: '© {{year}} Naturlust.net',
   },
   settingsContacts: {
