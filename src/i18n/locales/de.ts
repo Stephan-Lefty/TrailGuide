@@ -164,6 +164,18 @@ export const de = {
     shareUnavailableBody: 'Auf diesem Gerät ist keine Teilen-Funktion verfügbar.',
     shareDialogTitle: 'Aktivität teilen',
   },
+  batteryWarning: {
+    title: 'Akku wird knapp ({{percent}}%)',
+    body: 'Überlege, deinen Standort jetzt zu teilen oder die Aktivität rechtzeitig zu beenden.',
+  },
+  connectivityWarning: {
+    title: 'Netzverbindung wieder da',
+    body: 'Du hast jetzt wieder Empfang. Falls nötig, kannst du jetzt einen Notruf absetzen oder deinen Standort teilen.',
+  },
+  bootResume: {
+    title: 'Aktivität läuft noch',
+    body: 'Dein Gerät wurde neu gestartet. Öffne NaturlustTrailGuide wieder, um das Standort-Tracking fortzusetzen.',
+  },
   hike: {
     locationStatusTitle: 'Standort',
     locationSearching: 'Standort wird ermittelt...',

@@ -1,5 +1,7 @@
 import { BackHandler, Platform } from 'react-native';
 
+import { stopBatteryMonitoring } from '../battery/batteryWarningService';
+import { stopConnectivityMonitoring } from '../connectivity/connectivityWarningService';
 import { getActiveHike } from '../hike/hikeRepository';
 import { stopBackgroundLocationTracking } from '../location/backgroundLocationService';
 import { resetDatabase } from '../storage/db';
@@ -15,6 +17,8 @@ import { clearAllSettings } from '../storage/settingsStore';
 export async function factoryResetApp(): Promise<void> {
   if (getActiveHike()) {
     await stopBackgroundLocationTracking();
+    stopBatteryMonitoring();
+    stopConnectivityMonitoring();
   }
   resetDatabase();
   clearAllSettings();

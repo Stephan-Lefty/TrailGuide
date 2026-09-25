@@ -48,8 +48,14 @@ TaskManager.defineTask<LocationTaskData>(BACKGROUND_LOCATION_TASK, async ({ data
   }
 });
 
+/**
+ * TaskManager.isTaskRegisteredAsync() prueft nur, ob der Task-TYP definiert
+ * ist (das ist ab dem Modul-Laden immer der Fall) - nicht, ob gerade aktiv
+ * Standort-Updates angefordert werden. Fuer letzteres liefert expo-location
+ * eine eigene, dafuer gedachte Funktion.
+ */
 export async function isBackgroundLocationTaskRunning(): Promise<boolean> {
-  return TaskManager.isTaskRegisteredAsync(BACKGROUND_LOCATION_TASK);
+  return Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
 }
 
 export interface StartTrackingResult {

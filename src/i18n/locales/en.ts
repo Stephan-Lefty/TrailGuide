@@ -166,6 +166,18 @@ export const en: typeof de = {
     shareUnavailableBody: 'No share functionality is available on this device.',
     shareDialogTitle: 'Share activity',
   },
+  batteryWarning: {
+    title: 'Battery running low ({{percent}}%)',
+    body: 'Consider sharing your location now or ending the activity in time.',
+  },
+  connectivityWarning: {
+    title: 'Connection is back',
+    body: 'You have signal again. If needed, you can now place an emergency call or share your location.',
+  },
+  bootResume: {
+    title: 'Activity still running',
+    body: 'Your device restarted. Open NaturlustTrailGuide again to resume location tracking.',
+  },
   hike: {
     locationStatusTitle: 'Location',
     locationSearching: 'Determining location...',

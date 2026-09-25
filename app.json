@@ -55,8 +55,10 @@
       ],
       "expo-sqlite",
       "expo-localization",
+      "expo-notifications",
       "./plugins/withWhatsAppQuery",
       "./plugins/withReleaseSigning",
+      "./plugins/withBootResumeReceiver",
       "expo-mail-composer",
       "expo-sharing"
     ],
