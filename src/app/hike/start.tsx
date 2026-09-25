@@ -72,6 +72,8 @@ export default function StartHikeScreen() {
         keyboardType="phone-pad"
       />
 
+      <Text style={styles.locationDisclosure}>{t('hike.backgroundLocationDisclosure')}</Text>
+
       <Pressable onPress={handleStart} style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}>
         <Text style={styles.startButtonText}>{t('hike.startButton')}</Text>
       </Pressable>
@@ -117,6 +119,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.medium,
     color: semanticColors.textPrimary,
     marginBottom: 12,
+  },
+  locationDisclosure: {
+    fontFamily: fontFamily.sans,
+    fontSize: fontSize.small,
+    color: semanticColors.textSecondary,
+    lineHeight: 20,
+    marginTop: 8,
   },
   startButton: {
     backgroundColor: semanticColors.primary,
