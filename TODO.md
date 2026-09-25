@@ -28,6 +28,14 @@ Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
 - [x] Store-Screenshots fürs Play-Store-Format angepasst (Original-Screenshots hatten 2.23:1, Play Store erlaubt max. 2:1) - fertige Versionen liegen unter [screenshots/playstore/](screenshots/playstore/)
 - [ ] Version auf 1.0.0 anheben (app.json + package.json), sobald alles andere steht
 
+## Von Manuel Reindl (ÖAV) angeregte Verbesserungen (24.09.2026)
+
+- [x] Akku-Warnung während aktiver Tour, sobald der Akku unter 15% fällt (mit Ton)
+- [x] Hinweis mit Ton, sobald nach Verbindungsverlust wieder Netz verfügbar ist
+- [x] Erinnerung nach einem Geräte-Neustart, falls dabei noch eine Aktivität lief ("App wieder öffnen, um Tracking fortzusetzen") - bewusst kein automatischer Neustart des Trackings selbst (dafür wäre eine sensiblere Berechtigung nötig, die nicht zur Datensparsamkeits-Positionierung passt)
+- [x] Nebenbei entdeckten Bug behoben: Fand die App beim Start eine bereits laufende Aktivität vor (z.B. nach einem Geräte-Neustart), wurde das Standort-Tracking bisher NICHT automatisch fortgesetzt - nur die Akku-/Netz-Überwachung. Das lief unbemerkt seit der Testversion vom Vortag mit Manuel.
+- [ ] Bewusst nicht umgesetzt: Notruf automatisch absetzen, sobald wieder Netz da ist - ein Telefonanruf lässt sich nicht "vormerken"; die App erinnert stattdessen nur daran, dass man jetzt wieder Netz hat
+
 ## Qualitätssicherung
 
 - [ ] Testen auf weiteren Android-Herstellern (Samsung, Xiaomi) - Motorola wurde bereits mehrfach über mehrere Stunden getestet, andere Hersteller drosseln Hintergrund-Apps teils stärker
