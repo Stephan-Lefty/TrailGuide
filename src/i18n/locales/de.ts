@@ -196,6 +196,11 @@ export const de = {
       'Dieser Kontakt wird nur für diese Aktivität gespeichert und danach automatisch wieder entfernt.',
     backgroundLocationDisclosure:
       'Diese App zeichnet deinen Standort auch bei gesperrtem Display auf, solange die Aktivität läuft - damit im Notfall dein letzter bekannter Standort geteilt werden kann. Dein Gerät fragt dich gleich einmalig, ob du diesen Zugriff "Immer zulassen" möchtest.',
+    permissionChecking: 'Berechtigung wird geprüft...',
+    permissionStepTitle: 'Schritt 1 von 2: Standortzugriff',
+    permissionGrantButton: 'Standortzugriff erlauben',
+    permissionReadyHint:
+      'Geschafft - der Standortzugriff steht. Tippe jetzt noch einmal auf "Aktivität starten", dann beginnt die Aufzeichnung.',
     startButton: 'Aktivität starten',
     activeSince: 'Aktivität aktiv seit {{time}} Uhr',
     endButton: 'Aktivität beenden',

@@ -2,8 +2,9 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 
 import { getActiveHike } from '../hike/hikeRepository';
-import { addTrackPoint } from '../hike/trackPointsRepository';
+import { addTrackPoint, getLastTrackPointTime } from '../hike/trackPointsRepository';
 import { pushTrackLocation } from '../sharing/relayApiClient';
+import { isUsableFix } from './locationQuality';
 
 export const BACKGROUND_LOCATION_TASK = 'ntg-background-location-task';
 
@@ -26,8 +27,16 @@ TaskManager.defineTask<LocationTaskData>(BACKGROUND_LOCATION_TASK, async ({ data
   if (!activeHike) return;
 
   const hasActiveShare = Boolean(activeHike.shareToken) && (activeHike.shareExpiresAt ?? 0) > Date.now();
+  let lastRecordedAt = getLastTrackPointTime(activeHike.id);
 
   for (const location of data.locations) {
+    // Verworfene Punkte werden auch nicht an den Live-Link geschickt - sonst
+    // wuerde ein Verfolger genau die Spruenge sehen, die hier aussortiert werden.
+    if (!isUsableFix(location.coords.accuracy, location.timestamp, lastRecordedAt)) {
+      continue;
+    }
+    lastRecordedAt = location.timestamp;
+
     addTrackPoint(activeHike.id, {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
@@ -63,7 +72,28 @@ export interface StartTrackingResult {
   reason?: 'foreground_denied' | 'background_denied';
 }
 
-export async function startBackgroundLocationTracking(): Promise<StartTrackingResult> {
+/**
+ * Prueft nur, ohne zu fragen - fuer den Start-Bildschirm, der beim Oeffnen
+ * entscheiden muss, ob er zuerst um die Berechtigung bittet oder direkt den
+ * Start anbietet.
+ */
+export async function hasBackgroundLocationPermission(): Promise<boolean> {
+  const foreground = await Location.getForegroundPermissionsAsync();
+  if (foreground.status !== 'granted') return false;
+  const background = await Location.getBackgroundPermissionsAsync();
+  return background.status === 'granted';
+}
+
+/**
+ * Fordert beide Berechtigungen an, ohne schon etwas aufzuzeichnen.
+ *
+ * Bewusst getrennt vom eigentlichen Start: requestBackgroundPermissionsAsync()
+ * oeffnet auf Android 11+ keinen Dialog, sondern eine eigene Systemseite. Die
+ * App wird dabei pausiert und kann von Android abgeraeumt werden - Code, der
+ * nach dem await noch etwas erledigen will, laeuft dann womoeglich nie. Deshalb
+ * darf vorher nichts angelegt worden sein, was aufgeraeumt werden muesste.
+ */
+export async function requestLocationPermissions(): Promise<StartTrackingResult> {
   const foreground = await Location.requestForegroundPermissionsAsync();
   if (foreground.status !== 'granted') {
     return { success: false, reason: 'foreground_denied' };
@@ -71,6 +101,21 @@ export async function startBackgroundLocationTracking(): Promise<StartTrackingRe
 
   const background = await Location.requestBackgroundPermissionsAsync();
   if (background.status !== 'granted') {
+    return { success: false, reason: 'background_denied' };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Startet die Standort-Updates. Setzt voraus, dass die Berechtigung bereits
+ * erteilt ist - prueft das, fragt aber bewusst nicht nach: Ein Dialog oder gar
+ * ein Sprung in die Systemeinstellungen waehrend des Startvorgangs pausiert die
+ * App und hat genau die Doppelstarts verursacht, die wir loswerden wollen.
+ * Wer die Berechtigung noch einholen muss, ruft vorher requestLocationPermissions().
+ */
+export async function startBackgroundLocationTracking(): Promise<StartTrackingResult> {
+  if (!(await hasBackgroundLocationPermission())) {
     return { success: false, reason: 'background_denied' };
   }
 

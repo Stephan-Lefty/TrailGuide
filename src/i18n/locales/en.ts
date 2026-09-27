@@ -197,6 +197,11 @@ export const en: typeof de = {
     tourContactHint: 'This contact is saved only for this activity and removed automatically afterwards.',
     backgroundLocationDisclosure:
       'This app records your location even while the screen is locked, for as long as the activity is running - so your last known location can be shared in an emergency. Your device will ask you once, right after this, whether to allow this access "All the time".',
+    permissionChecking: 'Checking permission...',
+    permissionStepTitle: 'Step 1 of 2: Location access',
+    permissionGrantButton: 'Allow location access',
+    permissionReadyHint:
+      'Done - location access is granted. Now tap "Start activity" once more and the recording begins.',
     startButton: 'Start activity',
     activeSince: 'Activity active since {{time}}',
     endButton: 'End activity',

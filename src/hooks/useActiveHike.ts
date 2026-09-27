@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { startBatteryMonitoring, stopBatteryMonitoring } from '../services/battery/batteryWarningService';
 import { startConnectivityMonitoring, stopConnectivityMonitoring } from '../services/connectivity/connectivityWarningService';
@@ -7,6 +8,7 @@ import { createHike, getActiveHike, updateHikeStatus } from '../services/hike/hi
 import { deleteTrackPoints } from '../services/hike/trackPointsRepository';
 import {
   isBackgroundLocationTaskRunning,
+  requestLocationPermissions,
   startBackgroundLocationTracking,
   stopBackgroundLocationTracking,
   type StartTrackingResult,
@@ -47,9 +49,33 @@ export function useActiveHike() {
     })();
   }, [hike?.id]);
 
-  const startHike = useCallback(async (): Promise<{ hike: Hike; tracking: StartTrackingResult }> => {
+  /**
+   * Holt den Zustand aus der Datenbank, sobald die App aus dem Hintergrund
+   * zurueckkehrt. Ohne das kann die Anzeige auseinanderlaufen: der Bildschirm
+   * liest sonst nur beim Aufbauen einmal aus SQLite und zeigt danach
+   * womoeglich "Aktivitaet starten", obwohl laengst eine laeuft.
+   */
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => subscription.remove();
+  }, [refresh]);
+
+  /**
+   * Die Berechtigung wird ZUERST eingeholt - erst danach entsteht ein
+   * Datenbankeintrag. Andersherum (so war es bis 1.0.0) legte createHike() die
+   * Aktivitaet an, dann oeffnete Android die Berechtigungsseite und raeumte
+   * dabei die App ab; der Nutzer landete wieder auf dem Start-Bildschirm und
+   * tippte erneut - und hatte zwei aktive Aktivitaeten.
+   */
+  const startHike = useCallback(async (): Promise<{ hike: Hike | null; tracking: StartTrackingResult }> => {
+    const permissions = await requestLocationPermissions();
+    if (!permissions.success) {
+      return { hike: null, tracking: permissions };
+    }
     const created = createHike();
-    setHike(created); // loest den Aktivitaets-Effekt unten aus (Akku-/Netz-Ueberwachung)
+    setHike(created); // loest den Aktivitaets-Effekt oben aus (Akku-/Netz-Ueberwachung)
     const tracking = await startBackgroundLocationTracking();
     return { hike: created, tracking };
   }, []);
@@ -63,7 +89,15 @@ export function useActiveHike() {
   const endHike = useCallback(
     async (hadIncident: boolean) => {
       if (!hike) return;
-      await stopBackgroundLocationTracking();
+      // Ein Fehler beim Stoppen darf das Beenden nicht verhindern. Stand diese
+      // Zeile ungeschuetzt am Anfang, blieb die Aktivitaet bei jedem Problem
+      // dauerhaft auf "aktiv" - mit der Folge, dass spaetere GPS-Punkte in eine
+      // neue Aktivitaet wanderten und die alte unsichtbar liegenblieb.
+      try {
+        await stopBackgroundLocationTracking();
+      } catch {
+        // Bewusst geschluckt: Der Status wird unten in jedem Fall gesetzt.
+      }
       stopBatteryMonitoring();
       stopConnectivityMonitoring();
       updateHikeStatus(hike.id, hadIncident ? 'ended_incident' : 'ended_normal', Date.now());

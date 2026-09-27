@@ -38,6 +38,32 @@ const MIGRATIONS: string[] = [
     recorded_at INTEGER NOT NULL
   );`,
   `CREATE INDEX IF NOT EXISTS idx_track_points_hike_id ON track_points (hike_id);`,
+  /**
+   * Es darf immer nur genau eine Aktivitaet aktiv sein. Bis Version 1.0.0
+   * konnte eine zweite entstehen: createHike() legte die Zeile an, BEVOR die
+   * Standort-Berechtigung abgefragt wurde. Kam der Nutzer aus der
+   * Android-Berechtigungsseite zurueck und tippte erneut auf "Starten", gab es
+   * zwei Zeilen mit status='active'. Die aeltere wurde unsichtbar (getActiveHike
+   * nimmt nur die neueste) und alle weiteren GPS-Punkte wanderten in die
+   * neuere - die erste Tour brach damit scheinbar mitten im Lauf ab.
+   *
+   * Solche Altlasten muessen geschlossen werden, bevor der Index angelegt
+   * werden kann - sonst weist SQLite ihn zurueck. Sie werden als Vorfall
+   * markiert statt geloescht: die Punkte sind moeglicherweise die einzige Spur
+   * einer echten Tour. Entfernen kann der Nutzer sie in "Meine Aktivitaeten".
+   * Als Endzeit dient der letzte aufgezeichnete Punkt, nicht der Zeitpunkt der
+   * Migration - sonst stuende dort eine Dauer, die es nie gab.
+   */
+  `UPDATE hikes SET
+     status = 'ended_incident',
+     ended_at = COALESCE(
+       (SELECT MAX(recorded_at) FROM track_points WHERE track_points.hike_id = hikes.id),
+       started_at
+     )
+   WHERE status = 'active'
+     AND id <> (SELECT id FROM hikes WHERE status = 'active' ORDER BY started_at DESC LIMIT 1);`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_hikes_single_active
+     ON hikes (status) WHERE status = 'active';`,
 ];
 
 export function getDb(): SQLite.SQLiteDatabase {

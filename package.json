@@ -2,7 +2,7 @@
   "name": "naturlust-trail-guide",
   "description": "NaturlustTrailGuide (NTG) - Sicherheits-App fuer Wanderer und Bergsteiger mit Standort-Tracking und Notruf-Funktion.",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "expo-router/entry",
   "dependencies": {
     "@react-native-community/netinfo": "12.0.1",

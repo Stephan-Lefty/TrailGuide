@@ -68,6 +68,15 @@ npm run deploy           # Deployment zu Cloudflare
 
 Bezieht sich auf die Versionsnummer der App (`app.json`/`package.json`).
 
+### 1.0.1
+Ausgelöst durch einen Vergleich einer echten Tour mit einer parallel laufenden Garmin-Uhr (27.09.2026):
+- **Genauigkeitsfilter für Standortdaten.** Im Hintergrund drosselt Android das GPS und liefert regelmäßig Schätzwerte aus Mobilfunk- oder WLAN-Ortung. Ungefiltert erzeugten die Sprünge von mehreren hundert Metern: Bei der Vergleichsmessung kamen 21,95 km statt der tatsächlich gelaufenen 9,59 km zustande, rund ein Drittel davon aus 19 einzelnen Ausreißern. Gravierender als die falsche Distanz war die Folge für den Ernstfall – ein geteilter Standort konnte mehrere hundert Meter daneben liegen. Punkte, die schlechter als 50 m gemeldet werden, werden jetzt verworfen. Bleibt der Empfang länger als fünf Minuten schlecht, wird trotzdem ein grober Punkt aufgezeichnet: Ein ungenauer Standort ist im Notfall besser als eine Lücke.
+- **Es kann nur noch genau eine Aktivität aktiv sein.** Bisher legte die App den Datenbankeintrag an, *bevor* sie nach der Standortberechtigung fragte. Da Android dafür eine eigene Systemseite öffnet und die App dabei pausiert, landete der Nutzer wieder auf dem Startbildschirm und tippte erneut – und hatte zwei aktive Aktivitäten. Die ältere wurde unsichtbar, alle weiteren GPS-Punkte wanderten in die neuere, und die erste Tour brach scheinbar mitten im Lauf ab. Ein Unique-Index in der Datenbank macht das jetzt technisch unmöglich.
+- **Zweistufiger Startbildschirm.** Fehlt die Berechtigung, erklärt Schritt 1 den Zweck und bietet nur „Standortzugriff erlauben" an – ohne dass schon eine Aktivität entsteht. Nach der Rückkehr aus den Systemeinstellungen wechselt der Bildschirm von selbst auf Schritt 2 und sagt ausdrücklich, dass jetzt noch einmal getippt werden muss.
+- **Der Live-Standort-Link nennt die Genauigkeit.** Wer den Link verfolgt, sah bisher nur eine Stecknadel und musste sie für exakt halten. Jetzt steht dabei, ob der Standort genau ist oder nur ein Umkreis – wer sucht, weiß damit, ob er einen Punkt oder ein Gebiet vor sich hat. Das Alter der Meldung steht in Minuten statt in Sekunden und wird ab zehn Minuten deutlich hervorgehoben.
+- Fehlerbehebung: Der Zustand wird jetzt neu aus der Datenbank gelesen, wenn die App aus dem Hintergrund zurückkehrt. Vorher konnte der Startbildschirm „Aktivität starten" anzeigen, obwohl längst eine lief.
+- Fehlerbehebung: Scheitert das Stoppen der Standortaufzeichnung, wird die Aktivität trotzdem sauber beendet. Vorher blieb sie in so einem Fall dauerhaft aktiv.
+
 ### 1.0.0
 Erste öffentliche Version, angeregt durch das Gespräch mit dem Österreichischen Alpenverein (Abteilung Bergsport):
 - Akku-Warnung während einer aktiven Tour, sobald der Akkustand unter 15% fällt (mit Ton).

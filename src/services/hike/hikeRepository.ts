@@ -23,17 +23,36 @@ function toHike(row: HikeRow): Hike {
   };
 }
 
+/**
+ * Legt eine neue Aktivitaet an. Sollte wider Erwarten noch eine offene Zeile
+ * existieren, wird sie in derselben Transaktion geschlossen - der Unique-Index
+ * idx_hikes_single_active wuerde den INSERT sonst zurueckweisen und der Nutzer
+ * koennte gar keine Aktivitaet mehr starten. Beides zusammen in einer
+ * Transaktion, damit kein Zustand entstehen kann, in dem die alte geschlossen,
+ * die neue aber nicht angelegt ist.
+ */
 export function createHike(): Hike {
   const id = randomUUID();
   const startedAt = Date.now();
   if (isSqliteSupported) {
     const db = getDb();
-    db.runSync(
-      'INSERT INTO hikes (id, started_at, status) VALUES (?, ?, ?)',
-      id,
-      startedAt,
-      'active' satisfies HikeStatus,
-    );
+    db.withTransactionSync(() => {
+      db.runSync(
+        `UPDATE hikes SET
+           status = 'ended_incident',
+           ended_at = COALESCE(
+             (SELECT MAX(recorded_at) FROM track_points WHERE track_points.hike_id = hikes.id),
+             started_at
+           )
+         WHERE status = 'active'`,
+      );
+      db.runSync(
+        'INSERT INTO hikes (id, started_at, status) VALUES (?, ?, ?)',
+        id,
+        startedAt,
+        'active' satisfies HikeStatus,
+      );
+    });
   }
   return { id, startedAt, endedAt: null, status: 'active', shareToken: null, shareExpiresAt: null };
 }

@@ -68,6 +68,15 @@ npm run deploy           # deploy to Cloudflare
 
 Refers to the app's version number (`app.json`/`package.json`).
 
+### 1.0.1
+Triggered by comparing a real hike against a Garmin watch running in parallel (27.09.2026):
+- **Accuracy filter for location data.** In the background, Android throttles GPS and regularly falls back to cell-tower or Wi-Fi positioning. Unfiltered, those estimates produced jumps of several hundred metres: the comparison recorded 21.95 km instead of the 9.59 km actually walked, about a third of it from 19 individual outliers. Worse than the wrong distance was the consequence for an emergency — a shared location could be several hundred metres off. Points reported as worse than 50 m are now discarded. If reception stays poor for more than five minutes, a rough point is recorded anyway: an imprecise location beats a gap when it matters.
+- **Only one activity can be active at a time.** The app used to create the database entry *before* asking for location permission. Because Android opens a separate system page for that and suspends the app in the process, users ended up back on the start screen and tapped again — leaving two active activities. The older one became invisible, all further GPS points went into the newer one, and the first hike appeared to break off mid-run. A unique index in the database now makes this impossible.
+- **Two-step start screen.** If permission is missing, step 1 explains why and offers only "Allow location access" — without creating an activity yet. On returning from the system settings the screen switches to step 2 by itself and explicitly says that one more tap is needed.
+- **The live location link states the accuracy.** Anyone following the link previously saw only a pin and had to assume it was exact. It now says whether the location is precise or merely an area — so a rescuer knows whether they are looking at a point or a search radius. The age of the reading is shown in minutes rather than seconds and is highlighted clearly after ten minutes.
+- Fix: The state is now re-read from the database when the app returns from the background. Previously the start screen could show "Start activity" even though one was already running.
+- Fix: If stopping location recording fails, the activity is still ended cleanly. Previously it stayed active indefinitely in that case.
+
 ### 1.0.0
 First public version, prompted by the conversation with the Austrian Alpine Club (mountain sports department):
 - Low-battery warning during an active activity once the battery drops below 15% (with sound).

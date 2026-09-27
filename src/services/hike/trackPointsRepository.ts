@@ -40,6 +40,23 @@ export function listTrackPoints(hikeId: string): TrackPoint[] {
   return rows.map(toTrackPoint);
 }
 
+/**
+ * Zeitstempel des zuletzt gespeicherten Punktes, oder null. Wird vom
+ * Genauigkeitsfilter gebraucht, um zu erkennen, wie lange schon nichts mehr
+ * aufgezeichnet wurde. Bewusst aus der Datenbank statt aus einer Variablen im
+ * Speicher: der Hintergrund-Task laeuft auch nach einem Prozess-Neustart durch
+ * Android weiter, dabei waere jeder In-Memory-Zustand verloren.
+ */
+export function getLastTrackPointTime(hikeId: string): number | null {
+  if (!isSqliteSupported) return null;
+  const db = getDb();
+  const rows = db.getAllSync<{ last: number | null }>(
+    'SELECT MAX(recorded_at) as last FROM track_points WHERE hike_id = ?',
+    hikeId,
+  );
+  return rows[0]?.last ?? null;
+}
+
 export function countTrackPoints(hikeId: string): number {
   if (!isSqliteSupported) return 0;
   const db = getDb();

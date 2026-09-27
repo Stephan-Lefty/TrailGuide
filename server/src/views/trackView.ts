@@ -48,6 +48,17 @@ export function renderTrackView(token: string): string {
   }
   .status { font-size: 0.85rem; color: #3d4a3f; margin-top: 12px; }
   .expired { color: #8b3a3a; font-weight: 600; }
+  .quality {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    line-height: 1.35;
+  }
+  .quality-good { background: #d8e6d2; color: #2c4a2f; }
+  .quality-rough { background: #f3e2c2; color: #7a5312; }
+  .stale { background: #f0d2d2; color: #8b3a3a; }
 </style>
 </head>
 <body>
@@ -58,6 +69,20 @@ export function renderTrackView(token: string): string {
   </div>
   <script>
     const token = ${JSON.stringify(token)};
+
+    /**
+     * "vor 624s" zwingt den Leser zum Kopfrechnen - gerade dann, wenn es
+     * darauf ankommt. Ab einer Minute wird deshalb in Minuten gerundet.
+     */
+    function formatAge(seconds) {
+      if (seconds < 60) return 'vor ' + seconds + ' Sekunden';
+      const minutes = Math.round(seconds / 60);
+      if (minutes === 1) return 'vor 1 Minute';
+      if (minutes < 60) return 'vor ' + minutes + ' Minuten';
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+      return 'vor ' + hours + ' Std. ' + rest + ' Min.';
+    }
 
     async function refresh() {
       try {
@@ -76,13 +101,32 @@ export function renderTrackView(token: string): string {
           content.innerHTML = '<p>Noch kein Standort empfangen. Wird gleich aktualisiert...</p>';
           return;
         }
-        const { latitude, longitude, timestamp } = data.location;
+        const { latitude, longitude, timestamp, accuracy } = data.location;
         const mapsUrl = 'https://www.google.com/maps?q=' + latitude + ',' + longitude;
         const secondsAgo = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
+
+        // Ein Retter soll auf einen Blick erkennen, ob er einen Punkt oder
+        // einen Suchradius vor sich hat - ein Kartenpunkt allein suggeriert
+        // sonst eine Genauigkeit, die es nicht gibt.
+        let quality = '';
+        if (typeof accuracy === 'number') {
+          const radius = Math.round(accuracy);
+          if (radius <= 50) {
+            quality = '<p class="quality quality-good">Standort genau (±' + radius + ' m)</p>';
+          } else {
+            quality =
+              '<p class="quality quality-rough">Nur ungefaehrer Standort (±' + radius + ' m).' +
+              ' Aktuell kommt kein genauer Satellitenempfang durch - die Person kann sich' +
+              ' irgendwo in diesem Umkreis befinden.</p>';
+          }
+        }
+
+        const staleClass = secondsAgo >= 600 ? ' stale' : '';
         content.innerHTML =
           '<p>' + latitude.toFixed(5) + ', ' + longitude.toFixed(5) + '</p>' +
           '<a class="maps-link" href="' + mapsUrl + '" target="_blank" rel="noopener">In Google Maps oeffnen</a>' +
-          '<p class="status">Aktualisiert vor ' + secondsAgo + 's</p>';
+          quality +
+          '<p class="status' + staleClass + '">Aktualisiert ' + formatAge(secondsAgo) + '</p>';
       } catch (e) {
         document.getElementById('content').innerHTML = '<p class="expired">Verbindung fehlgeschlagen.</p>';
       }
