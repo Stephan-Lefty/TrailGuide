@@ -4,7 +4,7 @@ import * as TaskManager from 'expo-task-manager';
 import { getActiveHike } from '../hike/hikeRepository';
 import { addTrackPoint, getLastTrackPoint } from '../hike/trackPointsRepository';
 import { pushTrackLocation } from '../sharing/relayApiClient';
-import { isPlausibleMove, isUsableFix } from './locationQuality';
+import { isPlausibleMove, isUsableFix, shouldPushToRelay } from './locationQuality';
 import { distanceBetween } from './trackStats';
 
 export const BACKGROUND_LOCATION_TASK = 'ntg-background-location-task';
@@ -12,6 +12,16 @@ export const BACKGROUND_LOCATION_TASK = 'ntg-background-location-task';
 interface LocationTaskData {
   locations: Location.LocationObject[];
 }
+
+/**
+ * Zeitpunkt der letzten Uebertragung an den Live-Link.
+ *
+ * Bewusst nur im Speicher: Nach einem Prozess-Neustart steht hier wieder null,
+ * und der naechste Punkt geht sofort raus. Ein Verfolger bekommt dann eher
+ * einen Punkt zu viel als einen zu wenig - die richtige Richtung fuer den
+ * Fehlerfall.
+ */
+let lastPushedAt: number | null = null;
 
 /**
  * Muss beim Modul-Laden (top-level) registriert werden, nicht erst beim
@@ -68,7 +78,8 @@ TaskManager.defineTask<LocationTaskData>(BACKGROUND_LOCATION_TASK, async ({ data
 
     addTrackPoint(activeHike.id, candidate);
 
-    if (hasActiveShare && activeHike.shareToken) {
+    if (hasActiveShare && activeHike.shareToken && shouldPushToRelay(lastPushedAt, candidate.timestamp)) {
+      lastPushedAt = candidate.timestamp;
       // Best-effort: ein einzelner fehlgeschlagener Push (z.B. kein Netz) darf
       // die lokale Aufzeichnung nicht unterbrechen, daher kein await-Fehlerabbruch.
       await pushTrackLocation(activeHike.shareToken, {

@@ -45,6 +45,33 @@ export function isUsableFix(
 }
 
 /**
+ * Mindestabstand zwischen zwei Uebertragungen an den Live-Link.
+ *
+ * Aufgezeichnet wird seit 1.0.2 alle 10 Sekunden, weil die Spur sonst die
+ * Kurven abschneidet. Jeden dieser Punkte auch zu uebertragen wuerde die Zahl
+ * der Netzabfragen verdreifachen - und die Funkverbindung kostet mehr Strom
+ * als der GPS-Empfaenger. Gemessen lag der Verbrauch bei 30-Sekunden-Takt bei
+ * rund 6 % pro Stunde; auf einer Tagestour ist das der Unterschied zwischen
+ * ankommen und nicht ankommen.
+ *
+ * Fuer die Verfolgung aendert sich dadurch nichts: Der Live-Link war auch
+ * vorher auf halbe Minute genau.
+ */
+export const MIN_PUSH_INTERVAL_MS = 30 * 1000;
+
+/**
+ * Ob ein Standort jetzt an den Live-Link gehen soll.
+ *
+ * Beim ersten Punkt nach dem Start (lastPushedAt === null) wird immer
+ * uebertragen - wer den Link gerade geteilt hat, soll nicht eine halbe Minute
+ * auf die erste Position warten.
+ */
+export function shouldPushToRelay(lastPushedAt: number | null, timestamp: number): boolean {
+  if (lastPushedAt === null) return true;
+  return timestamp - lastPushedAt >= MIN_PUSH_INTERVAL_MS;
+}
+
+/**
  * Hoechste Geschwindigkeit, die noch als echte Bewegung gelten kann.
  *
  * Grosszuegig angesetzt: Eine Abfahrt auf dem Rennrad oder mit Ski erreicht

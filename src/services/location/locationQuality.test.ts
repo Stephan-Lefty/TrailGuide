@@ -3,8 +3,10 @@ import {
   MAX_ACCURACY_METERS,
   MAX_CONSECUTIVE_REJECTS,
   MAX_JUDGED_GAP_MS,
+  MIN_PUSH_INTERVAL_MS,
   isPlausibleMove,
   isUsableFix,
+  shouldPushToRelay,
 } from './locationQuality';
 
 const NOW = 1_700_000_000_000;
@@ -103,5 +105,30 @@ describe('isPlausibleMove', () => {
 
   it('nimmt Stillstand an', () => {
     expect(isPlausibleMove(0, 10 * SEKUNDE, 0)).toBe(true);
+  });
+});
+
+describe('shouldPushToRelay', () => {
+  it('schickt den ersten Punkt sofort raus', () => {
+    // Wer den Link gerade geteilt hat, soll nicht eine halbe Minute auf die
+    // erste Position warten.
+    expect(shouldPushToRelay(null, NOW)).toBe(true);
+  });
+
+  it('haelt die Punkte dazwischen zurueck', () => {
+    // Aufgezeichnet wird alle 10 s - diese beiden gehen nicht raus.
+    expect(shouldPushToRelay(NOW, NOW + 10_000)).toBe(false);
+    expect(shouldPushToRelay(NOW, NOW + 20_000)).toBe(false);
+  });
+
+  it('uebertraegt nach Ablauf des Mindestabstands wieder', () => {
+    expect(shouldPushToRelay(NOW, NOW + MIN_PUSH_INTERVAL_MS)).toBe(true);
+    expect(shouldPushToRelay(NOW, NOW + MIN_PUSH_INTERVAL_MS + 1)).toBe(true);
+  });
+
+  it('haelt die Aktualitaet des Live-Links wie vor 1.0.2', () => {
+    // Vorher wurde alle 30 s aufgezeichnet und jeder Punkt uebertragen. Die
+    // Drosselung darf daran nichts verschlechtern.
+    expect(MIN_PUSH_INTERVAL_MS).toBeLessThanOrEqual(30_000);
   });
 });
