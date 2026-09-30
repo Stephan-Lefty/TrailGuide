@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { LocationStatusCard } from '../components/hike/LocationStatusCard';
 import { SosButton } from '../components/sos/SosButton';
@@ -29,7 +29,12 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    // Seit 1.0.2 ist die feste Ausrichtung im Hochformat aufgehoben - Android 16
+    // ignoriert sie auf grossen Displays ohnehin. Im Querformat reicht die Hoehe
+    // dann nicht mehr fuer alles, und ohne ScrollView waere ausgerechnet der
+    // SOS-Knopf unerreichbar. Im Hochformat aendert sich nichts: flexGrow laesst
+    // den Inhalt weiterhin die volle Hoehe fuellen.
+    <View style={styles.root}>
       <Pressable
         onPress={() => router.push('/settings')}
         hitSlop={12}
@@ -40,54 +45,68 @@ export default function HomeScreen() {
         <Text style={styles.settingsButtonIcon}>⚙</Text>
       </Pressable>
 
-      <View style={styles.header}>
-        <Image source={require('../../assets/app-icon-inapp.png')} style={styles.headerIcon} />
-        <Text style={styles.title}>{t('common.appName')}</Text>
-        <Text style={styles.subtitle}>{t('common.tagline')}</Text>
-      </View>
-
-      <View style={styles.hikeSection}>
-        {hike ? (
-          <>
-            <Text style={styles.activeSince}>
-              {t('hike.activeSince', {
-                time: new Date(hike.startedAt).toLocaleTimeString(undefined, {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                }),
-              })}
-            </Text>
-            <Pressable onPress={confirmEndHike} style={({ pressed }) => [styles.endButton, pressed && styles.pressed]}>
-              <Text style={styles.endButtonText}>{t('hike.endButton')}</Text>
-            </Pressable>
-            <LocationStatusCard active={!!hike} />
-          </>
-        ) : (
-          <>
-            <Pressable
-              onPress={() => router.push('/hike/start')}
-              style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
-            >
-              <Text style={styles.startButtonText}>{t('hike.startButton')}</Text>
-            </Pressable>
-            <Text style={styles.explanation}>{t('home.startHikeExplanation')}</Text>
-          </>
-        )}
-      </View>
-
-      <View style={styles.sosSection}>
-        <View style={styles.sosButtonWrapper}>
-          <SosButton disabled={!hike} />
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.header}>
+          <Image source={require('../../assets/app-icon-inapp.png')} style={styles.headerIcon} />
+          <Text style={styles.title}>{t('common.appName')}</Text>
+          <Text style={styles.subtitle}>{t('common.tagline')}</Text>
         </View>
-        <Text style={styles.explanation}>{hike ? t('home.sosExplanation') : t('home.sosDisabledHint')}</Text>
-      </View>
+
+        <View style={styles.hikeSection}>
+          {hike ? (
+            <>
+              <Text style={styles.activeSince}>
+                {t('hike.activeSince', {
+                  time: new Date(hike.startedAt).toLocaleTimeString(undefined, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }),
+                })}
+              </Text>
+              <Pressable
+                onPress={confirmEndHike}
+                style={({ pressed }) => [styles.endButton, pressed && styles.pressed]}
+              >
+                <Text style={styles.endButtonText}>{t('hike.endButton')}</Text>
+              </Pressable>
+              <LocationStatusCard active={!!hike} />
+            </>
+          ) : (
+            <>
+              <Pressable
+                onPress={() => router.push('/hike/start')}
+                style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
+              >
+                <Text style={styles.startButtonText}>{t('hike.startButton')}</Text>
+              </Pressable>
+              <Text style={styles.explanation}>{t('home.startHikeExplanation')}</Text>
+            </>
+          )}
+        </View>
+
+        <View style={styles.sosSection}>
+          <View style={styles.sosButtonWrapper}>
+            <SosButton disabled={!hike} />
+          </View>
+          <Text style={styles.explanation}>
+            {hike ? t('home.sosExplanation') : t('home.sosDisabledHint')}
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
+    backgroundColor: semanticColors.background,
+  },
+  container: {
+    // flexGrow statt flex: Im Hochformat fuellt der Inhalt weiterhin die ganze
+    // Hoehe, space-between wirkt also wie bisher. Reicht die Hoehe nicht, waechst
+    // der Inhalt darueber hinaus und laesst sich scrollen.
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: semanticColors.background,
