@@ -67,7 +67,17 @@ Stephan hat viermal den Standort verschickt und die Uhrzeiten notiert. Damit lie
 | 19:17 | 3 m |
 
 - [x] Drei von vier Positionen lagen im einstelligen Meterbereich, die vierte bei 30 m. **Alle vier unter der 50-m-Schwelle des Filters.** Für einen Rettungseinsatz ist das brauchbar: 30 m sind im Gelände noch Sichtweite.
-- [ ] Trotzdem offen: In der verschickten Nachricht steht **keine Angabe zur Genauigkeit**, nur Koordinaten und Maps-Link. Bei 30 m ist das unerheblich, bei 300 m nicht - und der Empfänger kann es nicht unterscheiden. Der Live-Viewer zeigt die Genauigkeit inzwischen, die einmalige Nachricht nicht.
+- [x] **Die Nachricht nennt jetzt die Genauigkeit** und wartet vorher kurz auf einen guten Fix (`shareAccuracy.ts`, mit Tests). Bisher standen dort nur Koordinaten und Maps-Link - bei 30 m unerheblich, bei 300 m gefährlich, und der Empfänger konnte beides nicht unterscheiden. Neu: "auf etwa 12 m genau" bzw. bei schlechtem Empfang "ACHTUNG: nur ungefähr! Ich kann bis zu 250 m von diesem Punkt entfernt sein." Das Warten ist auf 12 Sekunden begrenzt und bricht ab, sobald ein brauchbarer Fix da ist - im Ernstfall darf die Nachricht nicht an einer Wartezeit hängen.
+
+### Was bei einer Pause passiert - und damit im Ernstfall
+
+Stephans Frage nach der Auswertung: Was bedeutet das, wenn jemand Pause macht oder auf Rettung wartet? Das ist die wichtigste Frage der ganzen Messung, denn **wer verletzt liegt, bewegt sich nicht.** Nachgemessen an der bestätigten Standzeit von 18:51 bis 19:06:
+
+- [x] **Stillstand an sich ist nicht das Problem.** Der Referenztrack zeigt in sieben Standphasen eine Streuung von unter 3 m um den Mittelpunkt, im Median unter 1 m. Ein Gerät mit gutem Fix bleibt im Stand ruhig liegen.
+- [x] **Das Problem ist der Verlust des Fixes, den das Gerät nicht zugibt.** Unsere Aufzeichnung lief von 18:52:42 bis 18:56:48 - über vier Minuten - durchgehend 50 bis 245 m neben der tatsächlichen Position. Kein Zappeln, sondern ein systematischer Versatz: Das Handy hatte offensichtlich auf Funkzellen- oder WLAN-Ortung umgeschaltet und meldete trotzdem unauffällige Genauigkeitswerte. Um 18:57:29 war es wieder bei 2 m.
+- [x] **Mittelung über mehrere Messungen hilft dagegen nicht.** Durchgerechnet: In der schlechtesten Standphase der Referenz verbessert der Mittelwert aus 20 Messungen den Fehler von 1,1 auf 0,4 m - dort, wo ohnehin alles gut ist. Gegen einen systematischen Versatz ist Mittelung wirkungslos, weil alle Messungen gleich falsch sind.
+- [ ] **Der einzige belastbare Hebel ist Ehrlichkeit über die Unsicherheit.** Deshalb stehen Genauigkeit im Live-Viewer und jetzt auch in der einmaligen Nachricht. Was noch fehlt: Ein Hinweis an den Verfolger, wenn die Position über mehrere Minuten hinweg verdächtig wirkt (etwa stabile Koordinaten bei gleichzeitig springender Genauigkeit).
+- [ ] **Offene Frage für die nächste Messung:** Welche Genauigkeit hat das Gerät in diesen vier Minuten eigentlich gemeldet? Lag sie unter 50 m, muss die Schwelle sinken. Genau dafür steht die Genauigkeit seit 1.0.2 im GPX-Export - beim nächsten Vergleich ist die Frage beantwortbar.
 
 ### Weitere Befunde aus der Auswertung
 

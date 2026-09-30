@@ -34,6 +34,9 @@ export const de = {
     shareViaWhatsApp: 'WhatsApp teilen',
     shareButtonLoading: 'Standort wird ermittelt...',
     shareMessage: 'Mein aktueller Standort: {{url}}',
+    shareMessageAccurate: 'Mein aktueller Standort: {{url}}\n(auf etwa {{meters}} m genau)',
+    shareMessageRough:
+      'Mein aktueller Standort: {{url}}\n(ACHTUNG: nur ungefähr! Ich kann bis zu {{meters}} m von diesem Punkt entfernt sein.)',
     whatsappNotInstalledTitle: 'WhatsApp nicht installiert',
     whatsappNotInstalledBody: 'Auf diesem Gerät ist WhatsApp nicht installiert.',
     callNotPossibleTitle: 'Anruf nicht möglich',

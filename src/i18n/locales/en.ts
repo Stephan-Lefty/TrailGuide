@@ -36,6 +36,9 @@ export const en: typeof de = {
     shareViaWhatsApp: 'Share via WhatsApp',
     shareButtonLoading: 'Getting location...',
     shareMessage: 'My current location: {{url}}',
+    shareMessageAccurate: 'My current location: {{url}}\n(accurate to about {{meters}} m)',
+    shareMessageRough:
+      'My current location: {{url}}\n(CAUTION: approximate only! I may be up to {{meters}} m away from this point.)',
     whatsappNotInstalledTitle: 'WhatsApp not installed',
     whatsappNotInstalledBody: 'WhatsApp is not installed on this device.',
     callNotPossibleTitle: 'Call not possible',

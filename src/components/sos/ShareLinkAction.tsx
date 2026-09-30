@@ -4,6 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { useShareLink } from '../../hooks/useShareLink';
+import {
+  FIX_RETRY_INTERVAL_MS,
+  rateAccuracy,
+  roundAccuracy,
+  shouldKeepWaiting,
+} from '../../services/location/shareAccuracy';
 import { semanticColors } from '../../theme/colors';
 import { fontFamily, fontSize, radius } from '../../theme/typography';
 import type { Hike } from '../../types/hike';
@@ -43,9 +49,42 @@ export function ShareLinkAction({ hike }: ShareLinkActionProps) {
       }
       return null;
     }
-    const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-    const { latitude, longitude } = position.coords;
+    // Der erste Standort nach dem Aufwachen ist oft der zuletzt bekannte oder
+    // eine Funkzellen-Schaetzung. Deshalb ein kurzes Fenster lang nachfragen,
+    // bis ein brauchbarer Fix da ist - aber nur kurz, im Ernstfall darf die
+    // Nachricht nicht warten.
+    const begonnenUm = Date.now();
+    let position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+    while (shouldKeepWaiting(position.coords.accuracy, Date.now() - begonnenUm)) {
+      await new Promise((resolve) => setTimeout(resolve, FIX_RETRY_INTERVAL_MS));
+      const naechster = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      // Den schlechteren Wert nicht uebernehmen - der bisher beste bleibt stehen.
+      if ((naechster.coords.accuracy ?? Infinity) < (position.coords.accuracy ?? Infinity)) {
+        position = naechster;
+      }
+    }
+
+    const { latitude, longitude, accuracy } = position.coords;
     const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+    // Die Genauigkeit gehoert in die Nachricht. Ohne sie kann der Empfaenger
+    // einen Standort, der auf 5 m stimmt, nicht von einem unterscheiden, der
+    // 300 m daneben liegt - und sieht in beiden Faellen nur eine Stecknadel.
+    const quality = rateAccuracy(accuracy);
+    if (quality === 'good') {
+      return t('sos.shareMessageAccurate', {
+        url: mapsUrl,
+        meters: roundAccuracy(accuracy as number),
+      });
+    }
+    if (quality === 'rough') {
+      return t('sos.shareMessageRough', {
+        url: mapsUrl,
+        meters: roundAccuracy(accuracy as number),
+      });
+    }
     return t('sos.shareMessage', { url: mapsUrl });
   }
 
