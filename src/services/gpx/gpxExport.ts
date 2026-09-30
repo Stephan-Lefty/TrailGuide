@@ -16,6 +16,13 @@ export function buildGpxString(hike: Hike, points: TrackPoint[]): string {
   const trackPoints = points
     .map((point) => {
       const time = new Date(point.timestamp).toISOString();
+      // <ele> muss laut GPX-Schema vor <time> stehen, sonst weisen strenge
+      // Leser die Datei zurueck. Punkte aus der Zeit vor 1.0.2 haben keine
+      // Hoehe und lassen das Element weg.
+      const elevation =
+        point.altitude === null || point.altitude === undefined
+          ? ''
+          : `\n        <ele>${point.altitude.toFixed(1)}</ele>`;
       // Die gemeldete Genauigkeit wandert mit in die Datei. GPX 1.1 kennt kein
       // Feld dafuer, deshalb ein eigener Namensraum in <extensions> - fremde
       // Programme ueberlesen das, wir koennen hinterher aber nachvollziehen,
@@ -26,7 +33,7 @@ export function buildGpxString(hike: Hike, points: TrackPoint[]): string {
         point.accuracy === null || point.accuracy === undefined
           ? ''
           : `\n        <extensions>\n          <ntg:accuracy>${point.accuracy.toFixed(1)}</ntg:accuracy>\n        </extensions>`;
-      return `      <trkpt lat="${point.latitude}" lon="${point.longitude}">\n        <time>${time}</time>${accuracy}\n      </trkpt>`;
+      return `      <trkpt lat="${point.latitude}" lon="${point.longitude}">${elevation}\n        <time>${time}</time>${accuracy}\n      </trkpt>`;
     })
     .join('\n');
 

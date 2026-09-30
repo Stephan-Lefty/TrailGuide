@@ -41,6 +41,77 @@ export function totalDistanceMeters(points: TrackPoint[]): number {
 }
 
 /**
+ * Ab welchem Hoehenunterschied ein Anstieg als echt gilt.
+ *
+ * Die per GPS gemessene Hoehe schwankt deutlich staerker als die Position -
+ * ueblich ist etwa das Eineinhalbfache des horizontalen Fehlers, bei 10 m
+ * Genauigkeit also rund 15 m. Wuerde man einfach alle Aufwaertsschritte
+ * addieren, kaeme selbst auf einer Fahrt durch die Ebene ein dreistelliger
+ * Wert zusammen: das Rauschen geht abwechselnd hoch und runter, und die
+ * Summe zaehlt jedes Zappeln mit.
+ *
+ * Deshalb ein Ankerpunkt mit Schwelle: Erst wenn sich die Hoehe um mehr als
+ * diesen Betrag vom letzten Anker entfernt hat, gilt das als Steigung, und
+ * der Anker wandert mit. Bewegungen darunter werden verworfen.
+ */
+export const ALTITUDE_THRESHOLD_METERS = 10;
+
+export interface ElevationGain {
+  /** Summe aller echten Anstiege in Metern. */
+  up: number;
+  /** Summe aller echten Abstiege in Metern, als positive Zahl. */
+  down: number;
+}
+
+/**
+ * Hoehenmeter auf- und abwaerts.
+ *
+ * Punkte ohne Hoehenangabe werden uebersprungen - Aufzeichnungen aus der Zeit
+ * vor 1.0.2 haben gar keine, und dann kommt {up: 0, down: 0} heraus.
+ */
+export function elevationGain(
+  points: TrackPoint[],
+  thresholdMeters: number = ALTITUDE_THRESHOLD_METERS,
+): ElevationGain {
+  const heights = points
+    .map((point) => point.altitude)
+    .filter((altitude): altitude is number => altitude !== null && altitude !== undefined);
+
+  if (heights.length < 2) {
+    return { up: 0, down: 0 };
+  }
+
+  let up = 0;
+  let down = 0;
+  let anchor = heights[0];
+
+  for (const height of heights.slice(1)) {
+    const delta = height - anchor;
+    if (delta > thresholdMeters) {
+      up += delta;
+      anchor = height;
+    } else if (delta < -thresholdMeters) {
+      down -= delta;
+      anchor = height;
+    }
+  }
+
+  return { up, down };
+}
+
+/**
+ * Hoehenmeter fuer die Anzeige, etwa "+400 / -380 m". Gibt null zurueck, wenn
+ * es nichts zu zeigen gibt - dann soll die Zeile die Angabe ganz weglassen
+ * statt "+0 / -0 m" zu behaupten.
+ */
+export function formatElevation(gain: ElevationGain): string | null {
+  if (gain.up < 1 && gain.down < 1) {
+    return null;
+  }
+  return `+${Math.round(gain.up)} / -${Math.round(gain.down)} m`;
+}
+
+/**
  * Streckenlaenge fuer die Anzeige. Unter einem Kilometer in Metern, darueber
  * in Kilometern mit einer Nachkommastelle - so wie es Wander-Apps ueblicherweise
  * halten.

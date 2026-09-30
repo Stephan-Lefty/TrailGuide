@@ -7,7 +7,12 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { writeGpxFile } from '../../services/gpx/gpxExport';
 import { listPastHikes } from '../../services/hike/hikeRepository';
 import { deleteTrackPoints, listTrackPoints } from '../../services/hike/trackPointsRepository';
-import { formatDistance, totalDistanceMeters } from '../../services/location/trackStats';
+import {
+  elevationGain,
+  formatDistance,
+  formatElevation,
+  totalDistanceMeters,
+} from '../../services/location/trackStats';
 import { semanticColors } from '../../theme/colors';
 import { fontFamily, fontSize, radius } from '../../theme/typography';
 import type { Hike } from '../../types/hike';
@@ -112,6 +117,9 @@ export default function HikesListScreen() {
             <Text style={styles.deleteAllButtonText}>{t('hikesList.deleteAll')}</Text>
           </Pressable>
           {entries.map((entry) => {
+            // Aufzeichnungen vor 1.0.2 haben keine Hoehendaten - dann bleibt
+            // die Angabe weg, statt "+0 / -0 m" zu behaupten.
+            const elevation = formatElevation(elevationGain(entry.points));
             const dateLabel = new Date(entry.hike.startedAt).toLocaleDateString();
             const startTime = new Date(entry.hike.startedAt).toLocaleTimeString(undefined, {
               hour: '2-digit',
@@ -127,6 +135,7 @@ export default function HikesListScreen() {
                 </Text>
                 <Text style={styles.meta}>
                   {formatDistance(totalDistanceMeters(entry.points), i18n.language)}
+                  {elevation ? ` · ${elevation}` : ''}
                   {' · '}
                   {formatDuration(entry.hike.startedAt, entry.hike.endedAt)}
                   {' · '}

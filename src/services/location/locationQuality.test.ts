@@ -1,4 +1,11 @@
-import { FORCE_RECORD_AFTER_MS, MAX_ACCURACY_METERS, isUsableFix } from './locationQuality';
+import {
+  FORCE_RECORD_AFTER_MS,
+  MAX_ACCURACY_METERS,
+  MAX_CONSECUTIVE_REJECTS,
+  MAX_JUDGED_GAP_MS,
+  isPlausibleMove,
+  isUsableFix,
+} from './locationQuality';
 
 const NOW = 1_700_000_000_000;
 
@@ -41,5 +48,60 @@ describe('isUsableFix', () => {
     const lastRecordedAt = NOW - 47_000; // typischer Abstand auf dieser Tour
     expect(isUsableFix(120, NOW, lastRecordedAt)).toBe(false);
     expect(isUsableFix(12, NOW, lastRecordedAt)).toBe(true);
+  });
+});
+
+describe('isPlausibleMove', () => {
+  const SEKUNDE = 1000;
+
+  it('nimmt normale Radgeschwindigkeit an', () => {
+    // 25 km/h entsprechen rund 70 m in 10 Sekunden.
+    expect(isPlausibleMove(70, 10 * SEKUNDE, 0)).toBe(true);
+  });
+
+  it('nimmt eine schnelle Abfahrt an', () => {
+    // 75 km/h - auf dem Rennrad oder mit Ski erreichbar.
+    expect(isPlausibleMove(208, 10 * SEKUNDE, 0)).toBe(true);
+  });
+
+  it('verwirft die Spruenge der Radtour vom 29.09.2026', () => {
+    // Echte Werte aus dem Track, jeweils mit unauffaelliger Genauigkeitsangabe
+    // gemeldet und deshalb am Genauigkeitsfilter vorbeigekommen.
+    expect(isPlausibleMove(834, 18 * SEKUNDE, 0)).toBe(false); // 163,5 km/h
+    expect(isPlausibleMove(519, 16 * SEKUNDE, 0)).toBe(false); // 113,7 km/h
+    expect(isPlausibleMove(470, 17 * SEKUNDE, 0)).toBe(false); //  97,7 km/h
+    expect(isPlausibleMove(294, 5 * SEKUNDE, 0)).toBe(false); // 201,5 km/h
+  });
+
+  it('laesst die echte Bewegung derselben Tour unangetastet', () => {
+    // Auf der Heimfahrt hatte der Filter nichts zu tun - das muss so bleiben.
+    expect(isPlausibleMove(646 / 2, 37 * SEKUNDE, 0)).toBe(true);
+    expect(isPlausibleMove(160, 29 * SEKUNDE, 0)).toBe(true);
+  });
+
+  it('urteilt nach einer langen Funkpause nicht', () => {
+    // Nach einem Tunnel ist ein weiter Sprung echt.
+    expect(isPlausibleMove(5000, MAX_JUDGED_GAP_MS + 1, 0)).toBe(true);
+  });
+
+  it('urteilt kurz vor Ablauf der Frist noch', () => {
+    expect(isPlausibleMove(5000, MAX_JUDGED_GAP_MS - 1, 0)).toBe(false);
+  });
+
+  it('gibt nach mehreren Verwerfungen hintereinander auf', () => {
+    // Wichtigste Sicherung: War der Ankerpunkt selbst falsch, wuerde sonst der
+    // gesamte Rest der Tour verworfen.
+    expect(isPlausibleMove(834, 18 * SEKUNDE, MAX_CONSECUTIVE_REJECTS - 1)).toBe(false);
+    expect(isPlausibleMove(834, 18 * SEKUNDE, MAX_CONSECUTIVE_REJECTS)).toBe(true);
+  });
+
+  it('urteilt nicht ohne verstrichene Zeit', () => {
+    // Gebuendelt nachgelieferte Standorte koennen denselben Zeitstempel tragen.
+    expect(isPlausibleMove(500, 0, 0)).toBe(true);
+    expect(isPlausibleMove(500, -1000, 0)).toBe(true);
+  });
+
+  it('nimmt Stillstand an', () => {
+    expect(isPlausibleMove(0, 10 * SEKUNDE, 0)).toBe(true);
   });
 });

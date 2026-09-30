@@ -5,6 +5,7 @@ interface TrackPointRow {
   latitude: number;
   longitude: number;
   accuracy: number | null;
+  altitude: number | null;
   recorded_at: number;
 }
 
@@ -13,6 +14,7 @@ function toTrackPoint(row: TrackPointRow): TrackPoint {
     latitude: row.latitude,
     longitude: row.longitude,
     accuracy: row.accuracy,
+    altitude: row.altitude,
     timestamp: row.recorded_at,
   };
 }
@@ -21,11 +23,12 @@ export function addTrackPoint(hikeId: string, point: TrackPoint): void {
   if (!isSqliteSupported) return;
   const db = getDb();
   db.runSync(
-    'INSERT INTO track_points (hike_id, latitude, longitude, accuracy, recorded_at) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO track_points (hike_id, latitude, longitude, accuracy, altitude, recorded_at) VALUES (?, ?, ?, ?, ?, ?)',
     hikeId,
     point.latitude,
     point.longitude,
     point.accuracy ?? null,
+    point.altitude ?? null,
     point.timestamp,
   );
 }
@@ -34,7 +37,7 @@ export function listTrackPoints(hikeId: string): TrackPoint[] {
   if (!isSqliteSupported) return [];
   const db = getDb();
   const rows = db.getAllSync<TrackPointRow>(
-    'SELECT latitude, longitude, accuracy, recorded_at FROM track_points WHERE hike_id = ? ORDER BY recorded_at ASC',
+    'SELECT latitude, longitude, accuracy, altitude, recorded_at FROM track_points WHERE hike_id = ? ORDER BY recorded_at ASC',
     hikeId,
   );
   return rows.map(toTrackPoint);
@@ -55,6 +58,25 @@ export function getLastTrackPointTime(hikeId: string): number | null {
     hikeId,
   );
   return rows[0]?.last ?? null;
+}
+
+/**
+ * Der zuletzt gespeicherte Punkt, oder null.
+ *
+ * Der Plausibilitaetsfilter braucht nicht nur den Zeitstempel, sondern auch die
+ * Koordinaten - er urteilt anhand der Geschwindigkeit zum letzten angenommenen
+ * Punkt. Wie bei getLastTrackPointTime bewusst aus der Datenbank: Der
+ * Hintergrund-Task ueberlebt einen Prozess-Neustart durch Android, ein Wert im
+ * Speicher nicht.
+ */
+export function getLastTrackPoint(hikeId: string): TrackPoint | null {
+  if (!isSqliteSupported) return null;
+  const db = getDb();
+  const rows = db.getAllSync<TrackPointRow>(
+    'SELECT latitude, longitude, accuracy, altitude, recorded_at FROM track_points WHERE hike_id = ? ORDER BY recorded_at DESC LIMIT 1',
+    hikeId,
+  );
+  return rows[0] ? toTrackPoint(rows[0]) : null;
 }
 
 export function countTrackPoints(hikeId: string): number {

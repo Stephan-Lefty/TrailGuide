@@ -66,12 +66,38 @@ const MIGRATIONS: string[] = [
      ON hikes (status) WHERE status = 'active';`,
 ];
 
+/**
+ * Spalten, die erst nach dem ersten Release dazugekommen sind.
+ *
+ * Getrennt von MIGRATIONS, weil SQLite kein "ADD COLUMN IF NOT EXISTS" kennt:
+ * Das Array oben laeuft bei jedem App-Start komplett durch, ein blankes ALTER
+ * TABLE wuerde ab dem zweiten Start mit "duplicate column name" abbrechen.
+ * Deshalb wird vorher in PRAGMA table_info nachgesehen.
+ */
+const NACHTRAEGLICHE_SPALTEN: { tabelle: string; spalte: string; typ: string }[] = [
+  // Seit 1.0.2. Die Hoehe kam von Android immer mit, wurde aber nie gespeichert -
+  // im Export der Radtour vom 29.09.2026 hatte kein einzelner der 215 Punkte
+  // eine Hoehenangabe, waehrend Komoot fuer dieselbe Tour +400/-380 m auswies.
+  // Altbestand bleibt NULL; die Anzeige laesst die Hoehenmeter dann weg.
+  { tabelle: 'track_points', spalte: 'altitude', typ: 'REAL' },
+];
+
+function spaltenNachziehen(db: SQLite.SQLiteDatabase): void {
+  for (const { tabelle, spalte, typ } of NACHTRAEGLICHE_SPALTEN) {
+    const vorhanden = db.getAllSync<{ name: string }>(`PRAGMA table_info(${tabelle})`);
+    if (!vorhanden.some((eintrag) => eintrag.name === spalte)) {
+      db.execSync(`ALTER TABLE ${tabelle} ADD COLUMN ${spalte} ${typ};`);
+    }
+  }
+}
+
 export function getDb(): SQLite.SQLiteDatabase {
   if (!dbInstance) {
     dbInstance = SQLite.openDatabaseSync('naturlust_trail_guide.db');
     for (const statement of MIGRATIONS) {
       dbInstance.execSync(statement);
     }
+    spaltenNachziehen(dbInstance);
   }
   return dbInstance;
 }

@@ -2,9 +2,10 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 
 import { getActiveHike } from '../hike/hikeRepository';
-import { addTrackPoint, getLastTrackPointTime } from '../hike/trackPointsRepository';
+import { addTrackPoint, getLastTrackPoint } from '../hike/trackPointsRepository';
 import { pushTrackLocation } from '../sharing/relayApiClient';
-import { isUsableFix } from './locationQuality';
+import { isPlausibleMove, isUsableFix } from './locationQuality';
+import { distanceBetween } from './trackStats';
 
 export const BACKGROUND_LOCATION_TASK = 'ntg-background-location-task';
 
@@ -27,22 +28,45 @@ TaskManager.defineTask<LocationTaskData>(BACKGROUND_LOCATION_TASK, async ({ data
   if (!activeHike) return;
 
   const hasActiveShare = Boolean(activeHike.shareToken) && (activeHike.shareExpiresAt ?? 0) > Date.now();
-  let lastRecordedAt = getLastTrackPointTime(activeHike.id);
+  let lastPoint = getLastTrackPoint(activeHike.id);
+  // Zaehlt nur innerhalb dieses Aufrufs. Ueber Aufrufgrenzen hinweg sichert
+  // MAX_JUDGED_GAP_MS ab: Haengt der Anker fest, wird nach zwei Minuten ohne
+  // Aufzeichnung ohnehin wieder alles angenommen.
+  let consecutiveRejects = 0;
 
   for (const location of data.locations) {
     // Verworfene Punkte werden auch nicht an den Live-Link geschickt - sonst
     // wuerde ein Verfolger genau die Spruenge sehen, die hier aussortiert werden.
-    if (!isUsableFix(location.coords.accuracy, location.timestamp, lastRecordedAt)) {
+    if (!isUsableFix(location.coords.accuracy, location.timestamp, lastPoint?.timestamp ?? null)) {
       continue;
     }
-    lastRecordedAt = location.timestamp;
 
-    addTrackPoint(activeHike.id, {
+    const candidate = {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
       accuracy: location.coords.accuracy,
+      altitude: location.coords.altitude,
       timestamp: location.timestamp,
-    });
+    };
+
+    // Zweite Huerde: Auch ein Punkt mit unauffaelliger Genauigkeitsangabe kann
+    // grob falsch liegen. Erkennbar ist das nur daran, dass er vom letzten
+    // guten Punkt aus nicht erreichbar war.
+    if (lastPoint) {
+      const plausible = isPlausibleMove(
+        distanceBetween(lastPoint, candidate),
+        candidate.timestamp - lastPoint.timestamp,
+        consecutiveRejects,
+      );
+      if (!plausible) {
+        consecutiveRejects += 1;
+        continue;
+      }
+    }
+    consecutiveRejects = 0;
+    lastPoint = candidate;
+
+    addTrackPoint(activeHike.id, candidate);
 
     if (hasActiveShare && activeHike.shareToken) {
       // Best-effort: ein einzelner fehlgeschlagener Push (z.B. kein Netz) darf
