@@ -121,8 +121,13 @@ export async function startBackgroundLocationTracking(): Promise<StartTrackingRe
 
   await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
     accuracy: Location.Accuracy.High,
-    timeInterval: 30000,
-    distanceInterval: 25,
+    // 10 Sekunden statt der frueheren 30. Die Radtour vom 29.09.2026 hat
+    // gezeigt, dass 30 Sekunden bei Radgeschwindigkeit rund 7 % der Strecke
+    // verschlucken: zwischen zwei Punkten liegen dann ueber 150 Meter, und
+    // jede Kurve dazwischen wird zur Gerade. Derselbe Referenztrack auf
+    // 10-Sekunden-Abstand ausgeduennt verliert nur noch 2,8 %.
+    timeInterval: 10000,
+    distanceInterval: 10,
     showsBackgroundLocationIndicator: true,
     foregroundService: {
       notificationTitle: 'NaturlustTrailGuide',

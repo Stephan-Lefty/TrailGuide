@@ -26,20 +26,52 @@ Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
   - [x] Beide Webseiten nachgezogen (28.09.2026): Auf [der Tester-Seite](https://naturlust.net/trailguide-tester-gesucht/) stand noch "ich melde mich, sobald alle zusammen sind, das kann Wochen dauern" - jetzt steht dort, dass der Test freigegeben ist und niemand mehr warten muss, dazu die beiden Stolperfallen (Link am Handy öffnen, Einladung annehmen). Auf [der App-Seite](https://naturlust.net/trailguide-app/) ist der Abschnitt "Aktueller Stand" auf 1.0.1 umgeschrieben, inklusive der Geschichte des Garmin-Vergleichs (21,95 statt 9,59 km) - das erklärt den Genauigkeitsfilter besser als jede Funktionsliste.
   - [x] **Opt-in-Weg einmal selbst durchlaufen (28.09.2026)** - Stephan steht seit heute als angemeldeter Tester im Dashboard ("Momentan ist 1 Tester angemeldet" statt 0). Der Weg funktioniert: Opt-in-Link im Browser öffnen, "Werde Tester" klicken, danach ist die App im Store als "NaturlustTrailGuide (Early Access)" sichtbar. Anders als bei DialOS Mobil hat die Play-Console-App den Link **nicht** abgefangen. Eine per Kabel aufgespielte Fassung muss vorher weichen (Google signiert die Store-Version mit einem eigenen Schlüssel); danach startet die Installation von selbst. Die Notfallkontakte sind dabei weg und müssen neu eingetragen werden.
   - [ ] Parallel weiter Tester sammeln, bis mind. 12 Mailadressen zusammen sind (Stand 28.09.2026: 1 angemeldet)
-
-## Testplan für die nächste Tour (Radtour, 29.09.2026)
-
-- [ ] **Tour mit "Es gab einen Vorfall (Daten behalten)" beenden** - sonst löscht die App die Aufzeichnung sofort und der Vergleich ist unmöglich.
-- [ ] Komoot/Garmin parallel mitlaufen lassen. Referenzwert vom 27.09.: 21,95 km aufgezeichnet gegen 9,59 km tatsächlich. Liegen die Zahlen jetzt nah beieinander, ist der Genauigkeitsfilter bestätigt.
-- [ ] **Drei Quellen statt zwei**: Garmin (Uhr), Bosch (E-Bike-Display) und TrailGuide laufen gleichzeitig. Das Bosch-System hat einen Radsensor am Laufrad und misst die Strecke mechanisch, nicht per GPS - damit gibt es erstmals einen Vergleichswert, der von GPS-Rauschen völlig unabhängig ist. Wenn Garmin und Bosch nah zusammenliegen, ist das die verlässliche Referenz für unsere Zahl.
-  - [ ] Vor dem Start klären, wie die Bosch-Tour hinterher rauskommt (GPX-Export oder nur Kilometerstand im Display) - Stephan fragen, ClaudIA kennt die Menüs nicht.
-- [ ] Eine Radtour ist der härtere Test: Bei 20 km/h liegen zwischen zwei Messungen rund 165 m, der Filter muss Bewegung von Rauschen unterscheiden. Zu streng reißt die Spur, zu lasch kommen die Ausreißer zurück.
-- [ ] **Einmal Standort teilen** (so angekündigt): Uhrzeit notieren, damit sich die Nachricht hinterher im Track wiederfinden lässt. Dann vergleichen, welche Genauigkeit die App in dem Moment hatte und was in der Nachricht davon ankommt.
-- [ ] Live-Standort-Link einmal starten und von einem zweiten Gerät verfolgen - die neue Genauigkeitsanzeige (grün/gelb mit Umkreis-Hinweis) wurde im Gelände noch nie gesehen.
-- [ ] Beim einmaligen Standort-Teilen nachsehen, was wirklich in der Nachricht steht. Aktuell nur Koordinaten und Maps-Link, **ohne jede Angabe zur Genauigkeit** - bei grober Position merkt der Empfänger davon nichts.
-  - [ ] Nach der Freigabe: Opt-in-Link an die Tester verschicken. **Eingetragen ist nicht angemeldet** - jeder muss den Link zusätzlich öffnen und die Einladung annehmen, sonst zählt das Dashboard weiter 0. Der Link muss **am Handy** geöffnet werden; auf Stephans Gerät fängt die Play-Console-App `play.google.com`-Adressen ab, dann von Hand in den Browser kopieren. Beides gehört in die Einladungsmail.
+  - [ ] Opt-in-Link an die Tester verschicken. **Eingetragen ist nicht angemeldet** - jeder muss den Link zusätzlich öffnen und die Einladung annehmen, sonst zählt das Dashboard weiter 0. Der Link muss **am Handy** geöffnet werden; auf Stephans Gerät fängt die Play-Console-App `play.google.com`-Adressen ab, dann von Hand in den Browser kopieren. Beides gehört in die Einladungsmail.
   - [ ] Mehr als 12 Adressen einsammeln, falls möglich - bei DialOS Mobil waren es exakt zwölf ohne Puffer, und seit Wochen fehlen dort zwei, die nie angenommen haben.
   - [ ] 14-Tage-Frist abwarten (läuft erst, wenn zwölf **gleichzeitig** angemeldet sind), dann Produktionszugriff beantragen
+
+## Zweite Vergleichsmessung: Radtour vom 29.09.2026
+
+Erste Tour mit dem Genauigkeitsfilter aus 1.0.1, gefahren 18:07-19:51 Uhr, parallel auf Garmin/Komoot. Der Filter hat gehalten - dafür ist ein zweites, davon unabhängiges Problem sichtbar geworden.
+
+| | TrailGuide | Komoot (Referenz) |
+|---|---|---|
+| Strecke | 21,82 km | 22,33 km |
+| Dauer | 103,7 min | 102,2 min |
+| Punkte | 215 | 5029 |
+| Punktabstand | 29,1 s | 1,2 s |
+
+- [x] **Der Genauigkeitsfilter wirkt.** Vom 27.09. auf den 29.09.: von +129 % Abweichung (21,95 gegen 9,59 km) auf -2,3 %. Die Ausreißer von mehreren hundert Metern sind weg.
+- [x] **Die -2,3 % täuschen aber.** Sie sind die Summe aus zwei Fehlern, die sich gegenseitig fast aufheben. Nachgewiesen, indem der Komoot-Track auf unseren Punktabstand ausgedünnt wurde - das ist die Strecke, die bei perfekter Messung herauskommen müsste:
+  - Kurven abschneiden: **-1,61 km** (-7,2 %). Bei 29 s Abstand liegen zwischen zwei Punkten über 150 m, jede Kurve dazwischen wird zur Geraden.
+  - Restliches GPS-Rauschen: **+1,10 km** (+5,3 %), gemessen gegen den ausgedünnten Sollwert von 20,72 km.
+  - Ohne die Gegenprobe hätte die Messung als "praktisch deckungsgleich" gegolten. Merksatz für künftige Vergleiche: **Erst bei gleichem Punktabstand vergleichen.**
+- [x] **Punktabstand von 30 s auf 10 s verkürzt** (`timeInterval` in `backgroundLocationService.ts`, `distanceInterval` von 25 auf 10 m). Aus der Ausdünnungsreihe: 10 s verliert nur noch 2,8 % statt 7,2 %, 5 s wären 1,3 %. 10 s ist der Kompromiss zugunsten des Akkus.
+- [ ] **Akkuverbrauch bei 10 s messen.** Das ist die Gegenrechnung zur Verkürzung und noch offen. Bei einer Sicherheits-App auf einer Achtstundentour zählt jedes Prozent - wenn der Verbrauch deutlich steigt, muss der Abstand wieder hoch oder abhängig von der Geschwindigkeit werden.
+- [x] **Nachträgliche Geschwindigkeitsgrenzen sind der falsche Weg** - geprüft und verworfen. Ein Segment zu verwerfen heißt, die Strecke zwischen zwei realen Orten als null zu zählen; bei nur 215 Punkten ist jedes Segment über 100 m wert. Eine Grenze von 60 km/h drückt die Tour auf 17,46 km, 40 km/h auf 14,13 km - beides weit unter dem Sollwert. Dichter messen hilft, nachträglich aussortieren schadet.
+
+### Die vier geteilten Standorte
+
+Stephan hat viermal den Standort verschickt und die Uhrzeiten notiert. Damit ließ sich erstmals prüfen, wie genau die App im Ernstfall wäre - gemessen als Abstand zum nächstgelegenen Punkt des Referenztracks, also zeitunabhängig:
+
+| Uhrzeit | Abstand zur gefahrenen Strecke |
+|---|---|
+| 18:36 | 4 m |
+| 18:49 | 30 m |
+| 18:57 | 2 m |
+| 19:17 | 3 m |
+
+- [x] Drei von vier Positionen lagen im einstelligen Meterbereich, die vierte bei 30 m. **Alle vier unter der 50-m-Schwelle des Filters.** Für einen Rettungseinsatz ist das brauchbar: 30 m sind im Gelände noch Sichtweite.
+- [ ] Trotzdem offen: In der verschickten Nachricht steht **keine Angabe zur Genauigkeit**, nur Koordinaten und Maps-Link. Bei 30 m ist das unerheblich, bei 300 m nicht - und der Empfänger kann es nicht unterscheiden. Der Live-Viewer zeigt die Genauigkeit inzwischen, die einmalige Nachricht nicht.
+
+### Weitere Befunde aus der Auswertung
+
+- [x] **Genauigkeit wandert jetzt in den GPX-Export** (`<extensions>` mit eigenem Namensraum). Bei dieser Auswertung ließ sich nicht klären, welche Genauigkeit die verbliebenen Ausreißer gemeldet hatten - die Angabe steht in der Datenbank, fehlte aber in der Datei.
+- [x] **Streckenlänge in der Aktivitätsliste.** Bisher standen dort nur Dauer und "215 GPS-Punkte" - eine technische Zahl, die einem Wanderer nichts sagt. Die Punkte lagen ohnehin im Speicher, es hat nur niemand die Strecke daraus gerechnet. Neu: `trackStats.ts` mit Tests, Anzeige als "21,8 km · 104 min 38 s · 215 GPS-Punkte".
+- [ ] **Höhendaten fehlen komplett.** Der Export hat 0 von 215 Punkten mit Höhenangabe, Komoot hat für dieselbe Tour +400/-380 m. Für eine Bergsport-App ist das eine Lücke: `TrackPoint` kennt kein `altitude`, obwohl Android die Angabe mitliefert. Braucht eine Datenbank-Migration.
+- [x] Drei Aufzeichnungslücken über zwei Minuten, die längste 3,9 min - deutlich besser als die 10,4 min vom 27.09., aber noch da. Die App steht weiter nicht auf der Akku-Ausnahmeliste.
+- [ ] **Bosch-Kilometerstand steht noch aus** - der einzige Wert, der nicht aus GPS stammt, sondern mechanisch am Laufrad gemessen wird. Damit ließe sich klären, ob Komoots 22,33 km selbst schon etwas Rauschen enthalten.
+- [x] Beim Beenden wurde korrekt "Vorfall" gewählt, genau eine Aktivität war aktiv, Start- und Endzeit deckten sich mit Komoot. Die Korrekturen aus 1.0.1 haben im Feld gehalten.
 - [ ] Institutionelle Kontakte für Unterstützung/Reichweite angeschrieben (Details: [[project_trailguide_oeav_kontakt]] in Claudes Memory)
   - Manuel Reindl (ÖAV, Abteilung Bergsport): sehr interessiert, Gesprächstermin 24.09.2026, 20:30 Uhr (Videocall)
   - Bernd Noggler (Geschäftsführer Leitstelle Tirol): wies auf offizielle, seit 2018 etablierte App "SOS-EU-ALP" hin (direkt an Leitstelle angebunden); Stephan hat Datenschutz als Hauptunterschied herausgestellt (TrailGuide speichert standardmäßig nichts ohne Vorfall) und um Einschätzung/Unterstützung gebeten, Antwort steht noch aus

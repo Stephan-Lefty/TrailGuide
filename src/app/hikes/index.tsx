@@ -7,6 +7,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { writeGpxFile } from '../../services/gpx/gpxExport';
 import { listPastHikes } from '../../services/hike/hikeRepository';
 import { deleteTrackPoints, listTrackPoints } from '../../services/hike/trackPointsRepository';
+import { formatDistance, totalDistanceMeters } from '../../services/location/trackStats';
 import { semanticColors } from '../../theme/colors';
 import { fontFamily, fontSize, radius } from '../../theme/typography';
 import type { Hike } from '../../types/hike';
@@ -26,7 +27,7 @@ function formatDuration(startedAt: number, endedAt: number | null): string {
 }
 
 export default function HikesListScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [entries, setEntries] = useState<HikeEntry[] | null>(null);
 
   const load = useCallback(() => {
@@ -125,6 +126,8 @@ export default function HikesListScreen() {
                   {t('hikesList.activityLine', { date: dateLabel, start: startTime, end: endTime })}
                 </Text>
                 <Text style={styles.meta}>
+                  {formatDistance(totalDistanceMeters(entry.points), i18n.language)}
+                  {' · '}
                   {formatDuration(entry.hike.startedAt, entry.hike.endedAt)}
                   {' · '}
                   {t('hikesList.pointCount', { count: entry.points.length })}
