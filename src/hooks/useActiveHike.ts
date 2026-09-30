@@ -4,7 +4,7 @@ import { AppState } from 'react-native';
 import { startBatteryMonitoring, stopBatteryMonitoring } from '../services/battery/batteryWarningService';
 import { startConnectivityMonitoring, stopConnectivityMonitoring } from '../services/connectivity/connectivityWarningService';
 import { clearTourContact } from '../services/contacts/contactsRepository';
-import { createHike, getActiveHike, updateHikeStatus } from '../services/hike/hikeRepository';
+import { createHike, deleteHike, getActiveHike, updateHikeStatus } from '../services/hike/hikeRepository';
 import { deleteTrackPoints } from '../services/hike/trackPointsRepository';
 import {
   isBackgroundLocationTaskRunning,
@@ -17,6 +17,11 @@ import type { Hike } from '../types/hike';
 
 export function useActiveHike() {
   const [hike, setHike] = useState<Hike | null>(null);
+  /**
+   * Ob zur aktiven Aktivitaet tatsaechlich Standort-Updates laufen.
+   * null = keine Aktivitaet oder noch nicht geprueft.
+   */
+  const [trackingActive, setTrackingActive] = useState<boolean | null>(null);
 
   const refresh = useCallback(() => {
     setHike(getActiveHike());
@@ -38,12 +43,21 @@ export function useActiveHike() {
    * Hintergrund weiterlaufen.
    */
   useEffect(() => {
-    if (!hike) return;
+    if (!hike) {
+      setTrackingActive(null);
+      return;
+    }
     void (async () => {
-      const alreadyTracking = await isBackgroundLocationTaskRunning();
+      let alreadyTracking = await isBackgroundLocationTaskRunning();
       if (!alreadyTracking) {
-        await startBackgroundLocationTracking();
+        const result = await startBackgroundLocationTracking();
+        alreadyTracking = result.success;
       }
+      // Scheitert die Wiederaufnahme, laeuft eine Aktivitaet ohne Aufzeichnung
+      // weiter. Anders als beim Start laesst sie sich hier nicht einfach
+      // verwerfen - sie kann bereits echte Punkte enthalten. Stattdessen wird
+      // der Zustand nach oben gereicht, damit der Startbildschirm warnen kann.
+      setTrackingActive(alreadyTracking);
       void startBatteryMonitoring();
       void startConnectivityMonitoring();
     })();
@@ -76,7 +90,26 @@ export function useActiveHike() {
     }
     const created = createHike();
     setHike(created); // loest den Aktivitaets-Effekt oben aus (Akku-/Netz-Ueberwachung)
-    const tracking = await startBackgroundLocationTracking();
+
+    // Startet das Tracking nicht, darf die Aktivitaet nicht bestehen bleiben.
+    // Sonst zeigt die App "Aktivitaet aktiv seit ...", waehrend in Wirklichkeit
+    // nichts aufgezeichnet wird - der gefaehrlichste denkbare Zustand fuer eine
+    // Notfall-App, schlimmer als ein Start, der sichtbar scheitert. Genau so
+    // eine Leiche tauchte am 30.09.2026 in der Datenbank auf: ein Eintrag auf
+    // "aktiv", zu dem im Batterieprotokoll des Geraets nie ein Vordergrund-
+    // dienst lief.
+    let tracking: StartTrackingResult;
+    try {
+      tracking = await startBackgroundLocationTracking();
+    } catch {
+      tracking = { success: false, reason: 'start_failed' };
+    }
+    if (!tracking.success) {
+      deleteHike(created.id);
+      setHike(null);
+      return { hike: null, tracking };
+    }
+
     return { hike: created, tracking };
   }, []);
 
@@ -110,5 +143,5 @@ export function useActiveHike() {
     [hike],
   );
 
-  return { hike, startHike, endHike, refresh };
+  return { hike, trackingActive, startHike, endHike, refresh };
 }

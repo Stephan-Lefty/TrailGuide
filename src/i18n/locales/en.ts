@@ -11,6 +11,8 @@ export const en: typeof de = {
     sosExplanation:
       'Opens the emergency options: emergency call (112 and, where available, country-specific mountain rescue), the key-questions checklist, your emergency contacts, and the option to share your location.',
     sosDisabledHint: 'Only available once you have started an activity - this rules out an accidental emergency call.',
+    trackingStalled:
+      'CAUTION: your location is NOT being recorded right now. End the activity and start it again. While doing so, check that location access is still set to "Allow all the time".',
   },
   sos: {
     screenTitle: 'SOS',

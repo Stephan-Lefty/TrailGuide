@@ -70,6 +70,27 @@ export function updateHikeStatus(id: string, status: HikeStatus, endedAt: number
   db.runSync('UPDATE hikes SET status = ?, ended_at = ? WHERE id = ?', status, endedAt, id);
 }
 
+/**
+ * Entfernt eine Aktivitaet restlos.
+ *
+ * Gedacht fuer den Fall, dass der Start scheitert: createHike() legt die Zeile
+ * an, bevor das Standort-Tracking laeuft - startet das dann nicht, bliebe eine
+ * Aktivitaet auf "aktiv" stehen, die nie etwas aufzeichnet. Die App zeigte
+ * daraufhin "Aktivitaet aktiv seit ...", waehrend tatsaechlich nichts
+ * mitlief - fuer eine Notfall-App der gefaehrlichste denkbare Zustand.
+ *
+ * Bewusst loeschen statt auf "beendet" setzen: Eine Aktivitaet, die nie
+ * begonnen hat, gehoert nicht in die Liste der vergangenen Touren.
+ */
+export function deleteHike(id: string): void {
+  if (!isSqliteSupported) return;
+  const db = getDb();
+  db.withTransactionSync(() => {
+    db.runSync('DELETE FROM track_points WHERE hike_id = ?', id);
+    db.runSync('DELETE FROM hikes WHERE id = ?', id);
+  });
+}
+
 export function setShareLink(id: string, shareToken: string | null, shareExpiresAt: number | null): void {
   if (!isSqliteSupported) return;
   const db = getDb();

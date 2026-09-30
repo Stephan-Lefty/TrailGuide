@@ -12,7 +12,7 @@ import { fontFamily, fontSize, radius } from '../theme/typography';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
-  const { hike, endHike } = useActiveHike();
+  const { hike, trackingActive, endHike } = useActiveHike();
 
   useEffect(() => {
     if (!isOnboardingComplete()) {
@@ -69,6 +69,11 @@ export default function HomeScreen() {
               >
                 <Text style={styles.endButtonText}>{t('hike.endButton')}</Text>
               </Pressable>
+              {trackingActive === false && (
+                <View style={styles.trackingWarning}>
+                  <Text style={styles.trackingWarningText}>{t('home.trackingStalled')}</Text>
+                </View>
+              )}
               <LocationStatusCard active={!!hike} />
             </>
           ) : (
@@ -203,6 +208,20 @@ const styles = StyleSheet.create({
     fontSize: fontSize.medium,
     fontWeight: '600',
     color: semanticColors.textPrimary,
+  },
+  trackingWarning: {
+    backgroundColor: semanticColors.danger,
+    borderRadius: radius.large,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    width: '100%',
+  },
+  trackingWarningText: {
+    fontFamily: fontFamily.sans,
+    fontSize: fontSize.small,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.85,

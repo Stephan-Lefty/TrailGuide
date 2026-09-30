@@ -9,6 +9,8 @@ export const de = {
     sosExplanation:
       'Öffnet die Notfall-Optionen: Notruf (112 und ggf. länderspezifische Bergrettung), die W-Fragen-Checkliste, deine Notfallkontakte und die Möglichkeit, deinen Standort zu teilen.',
     sosDisabledHint: 'Erst verfügbar, sobald du eine Aktivität gestartet hast - so wird ein versehentlicher Notruf ausgeschlossen.',
+    trackingStalled:
+      'ACHTUNG: Dein Standort wird gerade NICHT aufgezeichnet. Beende die Aktivität und starte sie neu. Prüfe dabei, ob der Standortzugriff noch auf "Immer zulassen" steht.',
   },
   sos: {
     screenTitle: 'SOS',

@@ -104,7 +104,14 @@ export async function isBackgroundLocationTaskRunning(): Promise<boolean> {
 
 export interface StartTrackingResult {
   success: boolean;
-  reason?: 'foreground_denied' | 'background_denied';
+  /**
+   * 'start_failed' steht fuer alles, was beim Anmelden der Standort-Updates
+   * schiefgehen kann, ohne dass eine Berechtigung fehlt - etwa wenn Android
+   * den Vordergrunddienst verweigert. Dieser Fall war bis 1.0.2 gar nicht
+   * vorgesehen; die Ausnahme flog aus startHike() heraus und liess eine
+   * Aktivitaet zurueck, die auf "aktiv" stand, aber nie etwas aufzeichnete.
+   */
+  reason?: 'foreground_denied' | 'background_denied' | 'start_failed';
 }
 
 /**
@@ -154,21 +161,29 @@ export async function startBackgroundLocationTracking(): Promise<StartTrackingRe
     return { success: false, reason: 'background_denied' };
   }
 
-  await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-    accuracy: Location.Accuracy.High,
+  try {
+    await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
+      accuracy: Location.Accuracy.High,
     // 10 Sekunden statt der frueheren 30. Die Radtour vom 29.09.2026 hat
     // gezeigt, dass 30 Sekunden bei Radgeschwindigkeit rund 7 % der Strecke
     // verschlucken: zwischen zwei Punkten liegen dann ueber 150 Meter, und
     // jede Kurve dazwischen wird zur Gerade. Derselbe Referenztrack auf
     // 10-Sekunden-Abstand ausgeduennt verliert nur noch 2,8 %.
-    timeInterval: 10000,
-    distanceInterval: 10,
-    showsBackgroundLocationIndicator: true,
-    foregroundService: {
-      notificationTitle: 'NaturlustTrailGuide',
-      notificationBody: 'Standort wird waehrend deiner Aktivitaet erfasst.',
-    },
-  });
+      timeInterval: 10000,
+      distanceInterval: 10,
+      showsBackgroundLocationIndicator: true,
+      foregroundService: {
+        notificationTitle: 'NaturlustTrailGuide',
+        notificationBody: 'Standort wird waehrend deiner Aktivitaet erfasst.',
+      },
+    });
+  } catch {
+    // Android kann das Anmelden der Standort-Updates ablehnen, ohne dass eine
+    // Berechtigung fehlt - etwa wenn der Vordergrunddienst nicht starten darf.
+    // Bis 1.0.2 flog die Ausnahme ungefangen bis in den Aufrufer und liess eine
+    // Aktivitaet zurueck, die auf "aktiv" stand, ohne je etwas aufzuzeichnen.
+    return { success: false, reason: 'start_failed' };
+  }
 
   return { success: true };
 }
