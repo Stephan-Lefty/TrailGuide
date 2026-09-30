@@ -26,6 +26,7 @@
     "android": {
       "package": "net.naturlust.trailguide",
       "versionCode": 4,
+      "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#2c4a2f",
         "foregroundImage": "./assets/android-icon-foreground.png",

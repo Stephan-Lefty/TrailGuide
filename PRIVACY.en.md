@@ -17,6 +17,7 @@ This policy applies to the "NaturlustTrailGuide" (NTG) app.
 - **Emergency call (112 & country-specific numbers)**: The call runs through your device's regular phone function, exactly like a manually dialed call. No data is sent to any app server in the process.
 - **Live location link**: Only when you actively start this feature, your location is sent to a Cloudflare Worker relay (Cloudflare Workers KV) so the person with the link can see it. Cloudflare is a US-based company; data is stored with an automatic expiry and can be deleted immediately at any time via "End sharing". This is currently a technical testing solution; a move to a self-hosted, EU-based server is planned.
 - **GPX export**: If you export an activity as a GPX file (by mail or via the share sheet), the file only leaves your device once you actively trigger the send/share action and choose a recipient.
+- **No cloud backup by Android**: Android normally backs up installed apps' data to the user's Google account automatically and restores it on reinstallation. For this app that is explicitly switched off as of version 1.0.2 (`allowBackup="false"`). Location traces and emergency contacts therefore do not leave your device by this route either. The flip side: after switching devices or reinstalling, your emergency contacts are gone and have to be entered again — this is a deliberate choice.
 - **No analytics/tracking services**: The app contains no analytics, advertising, or third-party tracking SDKs.
 
 ## Permissions
