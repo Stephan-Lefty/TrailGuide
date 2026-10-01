@@ -1,8 +1,8 @@
-# Was zwei Vergleichsmessungen zutage gefördert haben
+# Was drei Vergleichsmessungen zutage gefördert haben
 
-Zwischen dem 27. und dem 30. September 2026 lief NaturlustTrailGuide zweimal auf einer echten Tour parallel zu Vergleichsgeräten mit. Aus diesen beiden Messungen sind die Versionen 1.0.1 und 1.0.2 entstanden. Dieses Dokument hält fest, was dabei gefunden wurde – nicht als Versionshinweise, sondern als Nachweis, wie die Fehler entdeckt wurden und warum die gewählte Lösung die richtige ist.
+Zwischen dem 27. September und dem 1. Oktober 2026 lief NaturlustTrailGuide dreimal auf einer echten Tour parallel zu Vergleichsgeräten mit. Aus diesen Messungen sind die Versionen 1.0.1, 1.0.2 und 1.0.3 entstanden. Dieses Dokument hält fest, was dabei gefunden wurde – nicht als Versionshinweise, sondern als Nachweis, wie die Fehler entdeckt wurden und warum die gewählte Lösung die richtige ist.
 
-Die Reihenfolge ist nach Schwere sortiert, nicht chronologisch. Die beiden gravierendsten Funde standen in keinem Testplan – sie kamen heraus, weil eine Zahl nicht passte.
+Die Reihenfolge ist nach Schwere sortiert, nicht chronologisch. Die gravierendsten Funde standen in keinem Testplan – sie kamen heraus, weil eine Zahl nicht passte.
 
 ---
 
@@ -215,11 +215,69 @@ Im Querformat ist der Knopf erst nach dem Scrollen sichtbar. Ein eigenes, zweisp
 
 ---
 
-## 10. Kleinere Lücken, die bei der Auswertung störten
+## 10. Höhenmeter um das Sechzehnfache zu hoch
+
+**Schwere:** Angezeigte Tourdaten frei erfunden
+**Gefunden:** 01.10.2026, dritte Vergleichsmessung (Wanderung, 30.09.2026)
+**Behoben in:** 1.0.3
+
+### Symptom
+Für eine zweistündige Wanderung über 4,2 Kilometer meldete die App **+496 / −496 Höhenmeter**. Die Garmin-Referenz wies **+30 / −40** aus. Die Strecke dagegen stimmte fast: 4,18 gegen 4,24 Kilometer.
+
+### Ursache
+Die Schwelle von 10 Metern aus 1.0.2 war aus der Praxis barometrischer Höhenmesser übernommen – für GPS ist sie viel zu niedrig. Gemessen lag der Höhenfehler bei **11,5 Metern Standardabweichung** mit Ausschlägen von −39 bis +32 Metern. Zappeln in dieser Größenordnung passiert eine 10-Meter-Schwelle ungehindert, und weil jeder Aufwärtsschritt zählt, summiert es sich über zwei Stunden zu einer Bergtour, die nie stattgefunden hat.
+
+### Was dabei zusätzlich herauskam
+Der Höhenfehler ist **kein weißes Rauschen, sondern eine träge Drift**. Die Autokorrelation des Fehlers lag von einem Punkt zum nächsten bei 0,74, bei fünf Punkten Abstand noch bei 0,52. Der Wert ist also über eine halbe Minute hinweg in dieselbe Richtung verzogen. Das erklärt, warum eine höhere Schwelle allein nicht reicht: Für sie sieht eine langsame Verschiebung um 25 Meter genauso aus wie ein echter Anstieg.
+
+Nebenbei fiel ein systematischer Versatz von **+38,8 Metern** gegenüber der Referenz auf. Das ist keine Fehlfunktion, sondern die Geoidundulation: Android meldet die Höhe über dem WGS84-Ellipsoid, Karten und Wander-Apps rechnen über dem Meeresspiegel. Bei 47,3° Nord und 11,2° Ost liegen dazwischen rund 48 Meter. Auf die Höhen*differenz* wirkt sich das nicht aus, auf eine absolute Höhenangabe sehr wohl – deshalb zeigt die App keine an. Der `<ele>`-Wert im GPX-Export trägt diesen Versatz allerdings.
+
+### Lösung
+Zwei Dinge zusammen, geprüft an drei Fällen:
+
+1. **Glättung über zwei Minuten vor der Summierung.** Das Mittelungsverfahren wurde nicht geraten, sondern ausgewählt. Der naheliegende gleitende Median hat eine Schwäche, die genau bei diesem Signal auftritt: Wechselt die Höhe regelmäßig zwischen zwei Werten, enthält das Fenster von beiden gleich viele, und der Median springt mit, statt zu mitteln – in der Prüfung mit einem symmetrischen Wechsel um ±20 Metern auf ebener Strecke meldete er 1120 Höhenmeter. Der einfache Mittelwert löst das, lässt sich aber von einem einzelnen groben Wert mitziehen. Gewählt wurde der **getrimmte Mittelwert**: erst die extremen 20 Prozent oben und unten wegwerfen, dann mitteln.
+2. **Schwelle von 10 auf 30 Meter.**
+
+| Verfahren | Wanderung (soll +30) | Kunstberg (soll +800) | Zickzack (soll 0) |
+|---|---|---|---|
+| Median 120 s | 74 m | 772 m | 1120 m |
+| Mittelwert 120 s | 65 m | 747 m | 0 m |
+| **getrimmter Mittelwert 120 s** | **32 m** | **758 m** | **0 m** |
+
+### Warum ein Kunstberg
+Auf einer flachen Wanderung lässt sich jedes Verfahren gut aussehen – es muss nur alles verwerfen. Die Gefahr ist die umgekehrte: ein Verfahren, das auf der Wiese stimmt und am Berg die Hälfte schluckt. Weil keine Bergtour als Messung vorliegt, wurde eine konstruiert: dieselben Zeitstempel und dasselbe gemessene Rauschen wie bei der echten Wanderung, aber ein Höhenprofil mit 800 echten Höhenmetern. Dort meldet das gewählte Verfahren 758 Meter, also vier Prozent zu wenig. Der Fehler ist auf flachem Gelände absolut klein und am Berg anteilig klein – und er geht nach unten statt nach oben, was die ehrlichere Richtung ist.
+
+---
+
+## 11. Ein einzelner Punkt, 83 Prozent des Streckenfehlers
+
+**Schwere:** Streckenangabe und Live-Standort verfälscht
+**Gefunden:** 01.10.2026, dritte Vergleichsmessung
+**Behoben in:** 1.0.3
+
+### Symptom
+Gegen die volle Referenz wich die Strecke nur um −1,3 Prozent ab. Wie schon bei der zweiten Messung täuscht diese Zahl: Dünnt man die Referenz auf unseren Punktabstand von 11,9 Sekunden aus, lautet der Zielwert 3,90 statt 4,24 Kilometer – und die tatsächliche Abweichung ist **+7,1 Prozent**.
+
+### Ursache
+Von 385 Punkten war genau **einer** schlecht. Er wurde mit 47,4 Metern Genauigkeit gemeldet und lag damit knapp unter der damaligen Grenze von 50. Zwei aufeinanderfolgende Segmente führten zu ihm hin und wieder zurück: 118,7 Meter in 9,3 Sekunden, dann 136,5 Meter in 9,5 Sekunden – 46 und 52 km/h auf einer Wanderung. Zusammen 255 Meter, die nie gegangen wurden: **83 Prozent des gesamten Streckenfehlers**.
+
+Die Plausibilitätsprüfung aus 1.0.2 griff nicht, weil ihre Grenze bei 90 km/h liegt. Sie ist bewusst so großzügig, damit eine Abfahrt auf dem Rennrad keine zerhackte Spur ergibt – für eine Wanderung ist das wirkungslos.
+
+### Lösung
+Der Genauigkeitsfilter wurde **für die Aufzeichnung** von 50 auf 30 Meter verschärft. Damit fällt der Punkt weg, und die Abweichung sinkt von +7,1 auf **+1,2 Prozent**. Noch strenger zu filtern bringt nichts mehr und kostet Punkte: Bei 12 Metern wären 35 statt 2 verworfen worden, bei kaum verändertem Ergebnis.
+
+**Beim Teilen eines einzelnen Standorts bleibt es bei 50 Metern.** Die beiden Fälle sehen gleich aus, sind es aber nicht: Ein geteilter Standort hat keine Alternative – was da ist, wird geteilt, der Anrufer wartet jetzt. Ein Spurpunkt hat hunderte Geschwister, und der nächste kommt in zehn Sekunden. Ihn wegzuwerfen kostet nichts.
+
+### Was dabei nicht kaputtging
+Bleibt der Empfang längere Zeit schlecht, greift weiterhin die Fünf-Minuten-Regel aus 1.0.1: Dann wird auch ein grober Punkt übernommen und mit seiner Genauigkeit gespeichert. Die Spur wird in schlechtem Gelände also dünner, sie reißt nicht ab.
+
+---
+
+## 12. Kleinere Lücken, die bei der Auswertung störten
 
 | Lücke | Wirkung | Lösung |
 |---|---|---|
-| Keine Höhendaten gespeichert | Von 215 Punkten einer Radtour hatte kein einziger eine Höhenangabe, die Referenz wies +400/−380 m aus | Spalte ergänzt, Höhenmeter mit 10-Meter-Schwelle gegen das Rauschen der GPS-Höhe |
+| Keine Höhendaten gespeichert | Von 215 Punkten einer Radtour hatte kein einziger eine Höhenangabe, die Referenz wies +400/−380 m aus | Spalte ergänzt, Höhenmeter zunächst mit 10-Meter-Schwelle – die sich dann als viel zu niedrig erwies, siehe Punkt 10 |
 | Genauigkeit fehlte im GPX-Export | Bei der Auswertung ließ sich nicht klären, welche Genauigkeit die Ausreißer gemeldet hatten – der Wert lag in der Datenbank, aber nicht in der Datei | Eigener Namensraum in `<extensions>` |
 | Geteilter Standort ohne Genauigkeitsangabe | Der Empfänger konnte einen auf 5 Meter genauen Standort nicht von einem 300 Meter danebenliegenden unterscheiden | Genauigkeit steht in der Nachricht, bei schlechtem Empfang als Warnung mit Umkreis |
 | Erster Fix wurde ungeprüft verschickt | Der erste Standort nach dem Aufwachen ist oft der zuletzt bekannte oder eine Funkzellen-Schätzung | Kurzes Warten auf einen brauchbaren Fix, auf zwölf Sekunden begrenzt |
@@ -228,11 +286,27 @@ Im Querformat ist der Knopf erst nach dem Scrollen sichtbar. Ein eigenes, zweisp
 
 ---
 
+## Was in der dritten Messung nicht schiefging
+
+Ein Fehlerbericht, der nur Fehler aufzählt, verzerrt das Bild. Drei Dinge wurden in derselben Messung geprüft und hielten stand:
+
+**Der geteilte Standort – die Angabe, auf die es im Ernstfall ankommt.** Während der Tour wurden viermal Koordinaten geteilt. Gegen die Referenz lagen sie 3,6 / 6,6 / 7,9 und 30,8 Meter daneben. Dreimal davon war die App näher an der Wahrheit als die Garmin-Uhr. Die Zeitstempel ließen sich unabhängig bestätigen: Das Batterieprotokoll zeigt Bildschirmaktivität um 17:29, 17:36, 17:53 und 18:48 – genau zu den vier gemeldeten Uhrzeiten.
+
+**Der Akkuverbrauch nach der Umstellung auf den Zehn-Sekunden-Takt.** 65 auf 51 Prozent in 1 Stunde 58 Minuten, also **7,1 Prozent pro Stunde**. Der Bildschirm war dabei 94 Prozent der Zeit aus; nach dem Beenden der Tour sank der Stand bei eingeschaltetem Bildschirm mit 16 Prozent pro Stunde mehr als doppelt so schnell. Gegenüber dem Dreißig-Sekunden-Takt der Vorversion (rund 6 Prozent pro Stunde) kostet die Verdreifachung der Messrate also etwa einen Prozentpunkt pro Stunde. Der Grund ist naheliegend, wenn man ihn einmal gesehen hat: Der Satellitenempfänger läuft während einer Aktivität ohnehin durchgehend. Ihn häufiger abzufragen ändert wenig; ihn überhaupt einzuschalten ist der teure Teil.
+
+**Der Vordergrunddienst lief durch.** 17:15:19 bis 19:13:16 ohne eine einzige Unterbrechung, nachgewiesen über `dumpsys batterystats --history`. Die Warnung „Dein Standort wird gerade NICHT aufgezeichnet" aus 1.0.2 erschien nicht – also auch kein Fehlalarm.
+
+---
+
 ## Was diese Messungen methodisch gezeigt haben
 
 **Ein Referenzgerät ist unverzichtbar.** Beide gravierenden Messfehler wären ohne Vergleichstrack nie aufgefallen. Die App für sich betrachtet sah in beiden Fällen plausibel aus.
 
-**Ein gutes Ergebnis ist kein Beweis.** Die 2,3 Prozent der zweiten Messung sahen nach Erfolg aus und waren in Wahrheit zwei Fehler, die sich aufhoben. Erst die Gegenprobe bei gleichem Punktabstand brachte es ans Licht.
+**Ein gutes Ergebnis ist kein Beweis.** Die 2,3 Prozent der zweiten Messung sahen nach Erfolg aus und waren in Wahrheit zwei Fehler, die sich aufhoben. Erst die Gegenprobe bei gleichem Punktabstand brachte es ans Licht. Bei der dritten Messung wiederholte sich das Muster: −1,3 Prozent auf dem Papier, +7,1 Prozent in Wahrheit.
+
+**Eine gute Zahl in der einen Größe sagt nichts über die andere.** Die dritte Messung hatte die bis dahin beste Streckenangabe und gleichzeitig eine Höhenangabe, die um das Sechzehnfache danebenlag. Beides stammt aus demselben Datenstrom. Wer nur die Kilometer prüft, hält eine App für richtig, die eine Bergtour erfindet.
+
+**Ein Verfahren gegen einen einzigen Fall zu prüfen, reicht nicht.** Gegen die flache Wanderung allein hätte auch ein Verfahren gut ausgesehen, das am Berg die Hälfte verschluckt – es muss ja nur genug wegwerfen. Erst der zweite, konstruierte Fall mit 800 echten Höhenmetern und derselben Rauschcharakteristik zeigt, ob das Verfahren trennt oder nur unterdrückt. Und erst ein dritter, bewusst bösartiger Fall deckte auf, dass ausgerechnet der naheliegende gleitende Median bei regelmäßigem Wechsel zwischen zwei Werten versagt.
 
 **Die schwersten Funde standen in keinem Testplan.** Das Cloud-Backup und die Aktivität ohne Aufzeichnung kamen beide heraus, weil beim Prüfen von etwas anderem eine Zahl nicht passte.
 
