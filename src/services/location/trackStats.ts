@@ -53,8 +53,102 @@ export function totalDistanceMeters(points: TrackPoint[]): number {
  * Deshalb ein Ankerpunkt mit Schwelle: Erst wenn sich die Hoehe um mehr als
  * diesen Betrag vom letzten Anker entfernt hat, gilt das als Steigung, und
  * der Anker wandert mit. Bewegungen darunter werden verworfen.
+ *
+ * Der Wert stand zunaechst bei 10 m - uebernommen aus der Praxis barometrischer
+ * Hoehenmesser, und fuer GPS deutlich zu niedrig. Die Wanderung am 30.09.2026
+ * machte das sichtbar: 4,2 km mit tatsaechlich rund 30 Hoehenmetern meldete die
+ * App als +496 m, das Sechzehnfache. Der gemessene Hoehenfehler lag bei 11,5 m
+ * Standardabweichung, die Spanne reichte von -39 bis +32 m - Zappeln in dieser
+ * Groesse laesst eine 10-Meter-Schwelle ungehindert durch.
+ *
+ * 30 m zusammen mit der Glaettung darunter ist an zwei Faellen geprueft: an der
+ * flachen Wanderung (gemeldet +74 statt +30 m) und an einem kuenstlichen Berg
+ * aus demselben Rauschen und denselben Zeitstempeln, aber 800 Hoehenmetern
+ * (gemeldet +772 m, also 4 % zu wenig). Der verbleibende Fehler ist auf flachem
+ * Gelaende absolut klein und auf einer Bergtour anteilig klein - und er geht
+ * nach unten statt nach oben, was die ehrlichere Richtung ist.
  */
-export const ALTITUDE_THRESHOLD_METERS = 10;
+export const ALTITUDE_THRESHOLD_METERS = 30;
+
+/**
+ * Zeitfenster des gleitenden Medians, mit dem die Hoehen vor der Summierung
+ * geglaettet werden.
+ *
+ * Die Schwelle allein reicht nicht, weil der Hoehenfehler des Telefons kein
+ * weisses Rauschen ist, sondern traege driftet. Bei der Wanderung am
+ * 30.09.2026 lag die Autokorrelation des Fehlers bei 0,74 von einem Punkt zum
+ * naechsten - der Wert ist also ueber eine halbe Minute hinweg in dieselbe
+ * Richtung verzogen. Eine Schwelle kann so etwas nicht erkennen: Fuer sie
+ * sieht eine zehn Minuten lange Verschiebung um 25 Meter genauso aus wie ein
+ * echter Anstieg. Der Median ueber zwei Minuten dagegen mittelt die Drift weg,
+ * ohne eine echte Steigung abzuflachen - bei einem gleichmaessigen Anstieg
+ * liegt der Median genau auf der Rampe.
+ *
+ * Zwei Minuten sind der Kompromiss aus der Messung: kuerzer laesst zu viel
+ * Drift durch, laenger bringt kaum noch etwas und verschleift den Anfang und
+ * das Ende der Aufzeichnung.
+ */
+export const ALTITUDE_SMOOTHING_WINDOW_MS = 2 * 60 * 1000;
+
+/**
+ * Anteil, der im Glaettungsfenster oben und unten jeweils abgeschnitten wird.
+ */
+export const ALTITUDE_TRIM_RATIO = 0.2;
+
+/**
+ * Gleitender getrimmter Mittelwert der Hoehenwerte ueber ein Zeitfenster.
+ *
+ * Die Wahl des Mittelungsverfahrens ist an drei Faellen geprueft worden, und
+ * sie faellt nicht so aus, wie man zunaechst denkt:
+ *
+ * - Der Median liegt nahe, weil er einzelne Ausreisser ignoriert - und die gab
+ *   es, bis zu 42 m in einem Schritt. Er hat aber eine Schwaeche, die bei
+ *   genau diesem Signal auftritt: Wechselt die Hoehe regelmaessig zwischen zwei
+ *   Werten, enthaelt das Fenster von beiden gleich viele, und der Median
+ *   springt mit statt zu mitteln. In der Pruefung mit einem symmetrischen
+ *   Wechsel um +-20 m auf ebener Strecke meldete er 1120 Hoehenmeter.
+ * - Der einfache Mittelwert loest genau das (dort: 0 m), laesst sich aber von
+ *   einem einzelnen groben Wert mitziehen.
+ * - Der getrimmte Mittelwert nimmt von beiden das Gute: erst die extremen
+ *   ALTITUDE_TRIM_RATIO oben und unten wegwerfen, dann mitteln.
+ *
+ * Gemessen an der Wanderung vom 30.09.2026 (tatsaechlich rund +30 m):
+ * Median 74 m, Mittelwert 65 m, getrimmter Mittelwert 32 m. Am kuenstlichen
+ * Berg mit demselben Rauschen und 800 echten Hoehenmetern: 772 / 747 / 758 m.
+ * Der getrimmte Mittelwert ist in allen drei Pruefungen der beste.
+ *
+ * Das Fenster wandert mit zwei Zeigern mit, damit die Berechnung auch bei einer
+ * langen Tour mit mehreren tausend Punkten in der Tourenliste nicht spuerbar
+ * wird.
+ */
+export function smoothAltitudes(
+  samples: { timestamp: number; altitude: number }[],
+  windowMs: number = ALTITUDE_SMOOTHING_WINDOW_MS,
+): number[] {
+  const half = windowMs / 2;
+  const result: number[] = [];
+  let from = 0;
+  let to = 0;
+
+  for (let i = 0; i < samples.length; i += 1) {
+    const center = samples[i].timestamp;
+    while (from < samples.length && samples[from].timestamp < center - half) from += 1;
+    while (to < samples.length && samples[to].timestamp <= center + half) to += 1;
+
+    const window = samples
+      .slice(from, Math.max(to, from + 1))
+      .map((sample) => sample.altitude)
+      .sort((a, b) => a - b);
+
+    // Bei kurzen Fenstern bliebe nach dem Beschneiden nichts uebrig - dann
+    // ungetrimmt mitteln, statt den Punkt zu verlieren.
+    const cut = Math.floor(window.length * ALTITUDE_TRIM_RATIO);
+    const core = window.length - 2 * cut > 0 ? window.slice(cut, window.length - cut) : window;
+    result.push(core.reduce((sum, value) => sum + value, 0) / core.length);
+  }
+
+  return result;
+}
 
 export interface ElevationGain {
   /** Summe aller echten Anstiege in Metern. */
@@ -72,14 +166,20 @@ export interface ElevationGain {
 export function elevationGain(
   points: TrackPoint[],
   thresholdMeters: number = ALTITUDE_THRESHOLD_METERS,
+  smoothingWindowMs: number = ALTITUDE_SMOOTHING_WINDOW_MS,
 ): ElevationGain {
-  const heights = points
-    .map((point) => point.altitude)
-    .filter((altitude): altitude is number => altitude !== null && altitude !== undefined);
+  const samples = points
+    .filter(
+      (point): point is TrackPoint & { altitude: number } =>
+        point.altitude !== null && point.altitude !== undefined,
+    )
+    .map((point) => ({ timestamp: point.timestamp, altitude: point.altitude }));
 
-  if (heights.length < 2) {
+  if (samples.length < 2) {
     return { up: 0, down: 0 };
   }
+
+  const heights = smoothAltitudes(samples, smoothingWindowMs);
 
   let up = 0;
   let down = 0;

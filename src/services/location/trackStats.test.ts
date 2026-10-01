@@ -12,8 +12,28 @@ function punkt(latitude: number, longitude: number, timestamp = 0): TrackPoint {
   return { latitude, longitude, timestamp };
 }
 
+/**
+ * Hoehenpunkte fuer die Schwellen-Tests.
+ *
+ * Die Punkte liegen bewusst eine halbe Stunde auseinander, damit jeder fuer
+ * sich in seinem eigenen Glaettungsfenster liegt. So pruefen diese Tests
+ * ausschliesslich die Schwellenlogik; die Glaettung hat ihren eigenen Block
+ * weiter unten, dort mit realistischem Zehn-Sekunden-Abstand.
+ */
+let hoehenzaehler = 0;
 function hoehenpunkt(altitude: number | null): TrackPoint {
-  return { latitude: 47.37, longitude: 11.15, timestamp: 0, altitude };
+  hoehenzaehler += 1;
+  return {
+    latitude: 47.37,
+    longitude: 11.15,
+    timestamp: hoehenzaehler * 30 * 60 * 1000,
+    altitude,
+  };
+}
+
+/** Punkte im echten Aufzeichnungstakt von zehn Sekunden. */
+function taktpunkt(altitude: number, index: number): TrackPoint {
+  return { latitude: 47.37, longitude: 11.15, timestamp: index * 10_000, altitude };
 }
 
 describe('distanceBetween', () => {
@@ -124,7 +144,7 @@ describe('elevationGain', () => {
   it('erkennt einen Anstieg, der sich aus kleinen Schritten aufbaut', () => {
     // Jeder Einzelschritt liegt unter der Schwelle, die Summe nicht - der
     // Ankerpunkt bleibt liegen, bis die Schwelle ueberschritten ist.
-    const gain = elevationGain([1200, 1204, 1208, 1212, 1216].map(hoehenpunkt));
+    const gain = elevationGain([1200, 1208, 1216, 1224, 1232, 1240].map(hoehenpunkt));
     expect(gain.up).toBeGreaterThan(0);
     expect(gain.down).toBe(0);
   });
@@ -140,15 +160,58 @@ describe('elevationGain', () => {
     expect(gain.up).toBe(200);
   });
 
-  it('bleibt bei der Radtour vom 29.09.2026 in der Groessenordnung der Referenz', () => {
-    // Komoot weist fuer die Tour +400 / -380 m aus. Nachgerechnet mit dem
-    // Verfahren dieses Moduls ergab derselbe Track bei der Schwelle von
-    // ALTITUDE_THRESHOLD_METERS 364 / 344 m - rund 9 % weniger, weil die
-    // Schwelle neben dem Rauschen auch echte kleine Wellen schluckt. Die
-    // Anzeige unterschaetzt also eher, statt zu uebertreiben.
+  it('unterschaetzt eine Treppe eher, als sie zu uebertreiben', () => {
+    // 20 Stufen zu je 20 m, also 380 echte Hoehenmeter. Jede einzelne Stufe
+    // liegt unter der Schwelle, je zwei zusammen darueber - heraus kommen 360
+    // statt 380 m. Die Richtung ist Absicht: Lieber ein paar Meter zu wenig
+    // als eine erfundene Bergtour.
     const treppe = Array.from({ length: 20 }, (_, i) => hoehenpunkt(1100 + i * 20));
     const gain = elevationGain(treppe, ALTITUDE_THRESHOLD_METERS);
-    expect(gain.up).toBe(380);
+    expect(gain.up).toBe(360);
+    expect(gain.down).toBe(0);
+  });
+});
+
+describe('elevationGain - Glaettung', () => {
+  // Diese drei Faelle haben die Wahl des Verfahrens entschieden; siehe den
+  // Kommentar an smoothAltitudes. Sie gehoeren zusammen: Ein Verfahren, das
+  // nur einen davon besteht, ist nicht gut genug.
+  const FLACH = 1200;
+
+  function reihe(hoehen: number[]): TrackPoint[] {
+    return hoehen.map((hoehe, index) => taktpunkt(hoehe, index));
+  }
+
+  it('macht aus regelmaessigem Zappeln keine Hoehenmeter', () => {
+    // Symmetrischer Wechsel um +-20 m auf ebener Strecke, 20 Minuten lang.
+    // Genau hier scheitert ein gleitender Median: Er springt zwischen den
+    // beiden Werten hin und her, statt zu mitteln.
+    const zickzack = Array.from({ length: 121 }, (_, i) =>
+      Math.floor(i / 2) % 2 === 0 ? FLACH + 20 : FLACH - 20,
+    );
+    const gain = elevationGain(reihe(zickzack));
+    expect(gain.up).toBe(0);
+    expect(gain.down).toBe(0);
+  });
+
+  it('laesst sich von einem einzelnen groben Wert nicht mitziehen', () => {
+    // Ein Ausreisser von 60 m, wie sie bei schwachem Empfang vorkommen.
+    const mitAusreisser = Array.from({ length: 121 }, (_, i) => (i === 60 ? FLACH + 60 : FLACH));
+    const gain = elevationGain(reihe(mitAusreisser));
+    expect(gain.up).toBe(0);
+    expect(gain.down).toBe(0);
+  });
+
+  it('laesst einen echten Anstieg stehen', () => {
+    // 300 Hoehenmeter ueber 20 Minuten, ueberlagert vom selben Zappeln wie
+    // oben. Die Glaettung darf das Rauschen wegnehmen, nicht den Berg.
+    const anstieg = Array.from(
+      { length: 121 },
+      (_, i) => FLACH + (300 * i) / 120 + (Math.floor(i / 2) % 2 === 0 ? 20 : -20),
+    );
+    const gain = elevationGain(reihe(anstieg));
+    expect(gain.up).toBeGreaterThan(250);
+    expect(gain.up).toBeLessThanOrEqual(300);
     expect(gain.down).toBe(0);
   });
 });
