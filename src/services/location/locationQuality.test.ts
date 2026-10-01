@@ -1,8 +1,8 @@
 import {
   FORCE_RECORD_AFTER_MS,
-  MAX_ACCURACY_METERS,
   MAX_CONSECUTIVE_REJECTS,
   MAX_JUDGED_GAP_MS,
+  MAX_RECORDING_ACCURACY_METERS,
   MIN_PUSH_INTERVAL_MS,
   isPlausibleMove,
   isUsableFix,
@@ -17,11 +17,17 @@ describe('isUsableFix', () => {
   });
 
   it('nimmt einen Fix genau an der Schwelle noch an', () => {
-    expect(isUsableFix(MAX_ACCURACY_METERS, NOW, NOW - 30_000)).toBe(true);
+    expect(isUsableFix(MAX_RECORDING_ACCURACY_METERS, NOW, NOW - 30_000)).toBe(true);
   });
 
   it('verwirft eine grobe Mobilfunk-Ortung kurz nach dem letzten Punkt', () => {
     expect(isUsableFix(180, NOW, NOW - 30_000)).toBe(false);
+  });
+
+  it('verwirft den Punkt, der die Wanderung vom 30.09.2026 verdorben hat', () => {
+    // Gemeldet mit 47,4 m und damit knapp unter der alten Grenze von 50 m.
+    // Dieser eine Punkt von 385 machte 83 % des Streckenfehlers aus.
+    expect(isUsableFix(47.4, NOW, NOW - 10_000)).toBe(false);
   });
 
   it('behaelt einen Punkt ohne Genauigkeitsangabe, weil er nicht beurteilbar ist', () => {

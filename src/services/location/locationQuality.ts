@@ -21,6 +21,28 @@
 export const MAX_ACCURACY_METERS = 50;
 
 /**
+ * Dieselbe Frage fuer die aufgezeichnete Spur - und dort faellt die Abwaegung
+ * strenger aus.
+ *
+ * Ein geteilter Standort hat keine Alternative: Was da ist, wird geteilt, auch
+ * wenn es grob ist, denn der Anrufer wartet jetzt. Ein Spurpunkt dagegen hat
+ * hunderte Geschwister, und der naechste kommt in zehn Sekunden. Ihn
+ * wegzuwerfen kostet nichts, ihn zu behalten kann teuer werden.
+ *
+ * Wie teuer, zeigte die Wanderung am 30.09.2026. Von 385 Punkten war genau
+ * einer schlecht - gemeldet mit 47,4 m und damit knapp unter der Grenze
+ * darueber. Dieser eine Punkt lag so weit abseits, dass Hin- und Rueckweg zu
+ * ihm 255 m ergaben: 83 % des gesamten Streckenfehlers der Tour. Ihn
+ * auszusortieren bringt die Abweichung gegen die ausgeduennte Referenz von
+ * +7,1 % auf +1,2 %. Noch strenger zu filtern bringt nichts mehr, kostet aber
+ * Punkte: Bei 12 m waeren es 35 statt 2 gewesen.
+ *
+ * Bleibt der Empfang laenger schlecht, greift FORCE_RECORD_AFTER_MS auch hier.
+ * Die Spur reisst also nicht ab, sie wird nur duenner.
+ */
+export const MAX_RECORDING_ACCURACY_METERS = 30;
+
+/**
  * Bleibt der Empfang laenger schlecht, ist ein grober Standort immer noch
  * besser als gar keiner - die App soll im Ernstfall einen Anhaltspunkt liefern
  * koennen. Nach dieser Zeit ohne Aufzeichnung wird deshalb auch ein ungenauer
@@ -36,7 +58,7 @@ export function isUsableFix(
 ): boolean {
   // Ohne Angabe laesst sich die Qualitaet nicht beurteilen - im Zweifel behalten.
   if (accuracy === null || accuracy === undefined) return true;
-  if (accuracy <= MAX_ACCURACY_METERS) return true;
+  if (accuracy <= MAX_RECORDING_ACCURACY_METERS) return true;
   // Noch gar nichts aufgezeichnet: Der erste Punkt zaehlt in jedem Fall, sonst
   // stuende zu Beginn einer Tour bei schlechtem Empfang ueberhaupt nichts zur
   // Verfuegung.
