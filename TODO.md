@@ -91,6 +91,25 @@ Stephan kann die nächsten Tage nicht auf Tour, deshalb ein Schreibtischtest mit
 - [x] **Die neue Warnung erscheint nicht, wenn alles läuft** - kein Fehlalarm.
 - [ ] **Nicht abgedeckt: alles, was Bewegung braucht.** Der 10-Sekunden-Takt, die Plausibilitätsprüfung und die Höhenmeter sind im Feld ungetestet.
 
+## Release-Build: was beim Bauen von 1.0.3 im Weg stand (01.10.2026)
+
+Drei Stolpersteine, alle beim nächsten Mal wieder da. Reihenfolge der Befehle:
+
+```
+npx expo prebuild --platform android
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+export ANDROID_HOME=/home/stephan/Android/Sdk
+cd android && ./gradlew bundleRelease
+```
+
+- **`prebuild` löscht `android/` komplett und baut es neu.** Damit ist auch `android/local.properties` weg, in dem der SDK-Pfad steht - der Build bricht dann mit "SDK location not found" ab. Deshalb `ANDROID_HOME` setzen statt die Datei zu suchen. Der Signierschlüssel ist davon **nicht** betroffen: Die Zugangsdaten liegen in `~/.gradle/gradle.properties` und der Schlüssel selbst unter `~/keystores/`, beides außerhalb des Repos.
+- **Java 26 ist zu neu.** Der Android-Build scheitert an `jlink` ("Failed to transform core-for-system-modules.jar"). Java 21 ist installiert und funktioniert. Das System steht auf 26, also muss `JAVA_HOME` bei jedem Build gesetzt werden. Läuft schon ein Gradle-Daemon mit der falschen Version, hilft `./gradlew --stop` davor.
+- **Die Signatur gehört nachgeprüft.** In `build.gradle` steht eine Rückfallregel: Fehlt die Property `NTG_UPLOAD_STORE_FILE`, wird **stillschweigend mit dem Debug-Schlüssel signiert**. Das AAB entsteht trotzdem, und Google lehnt es erst beim Hochladen ab. Gegenprobe: Das Zertifikat aus `META-INF/*.RSA` im AAB muss denselben SHA256-Fingerabdruck haben wie `~/keystores/naturlusttrailguide-release.jks`.
+
+Ergebnis 1.0.3: 70,0 MB, `versionCode 5`, `versionName 1.0.3`, Signatur gegen den Upload-Keystore geprüft (`13:3D:75:E3:…`).
+
+---
+
 ## Dritte Vergleichsmessung (30.09.2026, Wanderung) - ausgewertet am 01.10.2026
 
 Zwei Stunden Wanderung, 4,2 km, Garmin/Komoot parallel. Ergebnis in einem Satz: **Die Strecke war so gut wie nie, die Höhenangabe war frei erfunden.** Daraus ist 1.0.3 entstanden. Die ausführliche Fassung steht in [docs/fehleranalyse-september-2026.md](docs/fehleranalyse-september-2026.md), Punkte 10 und 11.
