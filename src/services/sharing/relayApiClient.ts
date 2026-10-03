@@ -19,6 +19,12 @@ export interface RelayLocation {
   longitude: number;
   accuracy: number | null;
   timestamp: number;
+  /**
+   * Seit wann sich die Person nicht mehr von der Stelle bewegt, oder null.
+   * Seit 1.0.4 - damit ein Verfolger "macht Pause" von "Telefon tot"
+   * unterscheiden kann. Siehe standstill.ts.
+   */
+  stationarySince?: number | null;
 }
 
 export async function createTrackLink(ttlMinutes: number): Promise<CreateLinkResponse> {

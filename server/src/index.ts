@@ -59,7 +59,13 @@ export default {
 
       // POST /api/track/:token
       if (!revokeSuffix && method === 'POST') {
-        let body: { latitude?: unknown; longitude?: unknown; accuracy?: unknown; timestamp?: unknown };
+        let body: {
+          latitude?: unknown;
+          longitude?: unknown;
+          accuracy?: unknown;
+          timestamp?: unknown;
+          stationarySince?: unknown;
+        };
         try {
           body = await request.json();
         } catch {
@@ -73,6 +79,9 @@ export default {
           longitude: body.longitude,
           accuracy: isValidCoordinate(body.accuracy) ? body.accuracy : null,
           timestamp: isValidCoordinate(body.timestamp) ? body.timestamp : Date.now(),
+          // Apps vor 1.0.4 senden das Feld nicht - dann bleibt es null, und die
+          // Anzeige verhaelt sich wie bisher.
+          stationarySince: isValidCoordinate(body.stationarySince) ? body.stationarySince : null,
         });
         if (!updated) {
           return json({ error: 'not_found_or_expired' }, 404);

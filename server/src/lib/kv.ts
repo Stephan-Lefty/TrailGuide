@@ -3,6 +3,16 @@ export interface TrackedLocation {
   longitude: number;
   accuracy: number | null;
   timestamp: number;
+  /**
+   * Seit wann die Position unveraendert ist (ms seit Epoch), oder null.
+   *
+   * Seit 1.0.4. Ohne diese Angabe sind zwei grundverschiedene Lagen nicht zu
+   * unterscheiden: Jemand macht Rast - oder das Telefon ist aus. Der Live-Link
+   * zeigte in beiden Faellen nur "Aktualisiert vor 10 Minuten".
+   *
+   * Optional, damit aeltere App-Versionen weiter senden koennen.
+   */
+  stationarySince?: number | null;
 }
 
 export interface TrackEntry {

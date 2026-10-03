@@ -2,10 +2,20 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 
 import { getActiveHike } from '../hike/hikeRepository';
-import { addTrackPoint, getLastTrackPoint } from '../hike/trackPointsRepository';
+import {
+  addTrackPoint,
+  getLastTrackPoint,
+  listRecentTrackPoints,
+} from '../hike/trackPointsRepository';
 import { pushTrackLocation } from '../sharing/relayApiClient';
 import { isPlausibleMove, isUsableFix, shouldPushToRelay } from './locationQuality';
+import { stationarySince } from './standstill';
 import { distanceBetween } from './trackStats';
+
+/**
+ * So weit blickt die Stillstandserkennung zurueck. Siehe listRecentTrackPoints.
+ */
+const STANDSTILL_LOOKBACK_POINTS = 500;
 
 export const BACKGROUND_LOCATION_TASK = 'ntg-background-location-task';
 
@@ -56,6 +66,7 @@ TaskManager.defineTask<LocationTaskData>(BACKGROUND_LOCATION_TASK, async ({ data
       longitude: location.coords.longitude,
       accuracy: location.coords.accuracy,
       altitude: location.coords.altitude,
+      altitudeAccuracy: location.coords.altitudeAccuracy,
       timestamp: location.timestamp,
     };
 
@@ -77,19 +88,32 @@ TaskManager.defineTask<LocationTaskData>(BACKGROUND_LOCATION_TASK, async ({ data
     lastPoint = candidate;
 
     addTrackPoint(activeHike.id, candidate);
-
-    if (hasActiveShare && activeHike.shareToken && shouldPushToRelay(lastPushedAt, candidate.timestamp)) {
-      lastPushedAt = candidate.timestamp;
-      // Best-effort: ein einzelner fehlgeschlagener Push (z.B. kein Netz) darf
-      // die lokale Aufzeichnung nicht unterbrechen, daher kein await-Fehlerabbruch.
-      await pushTrackLocation(activeHike.shareToken, {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        accuracy: location.coords.accuracy,
-        timestamp: location.timestamp,
-      });
-    }
   }
+
+  // Die Uebertragung an den Live-Link steht bewusst HINTER der Schleife, nicht
+  // darin. Zwei Gruende: Erstens darf ein langsamer Netzzugriff nicht die
+  // Aufzeichnung der restlichen Punkte desselben Bundles aufhalten - Android
+  // liefert gepufferte Standorte oft in Gruppen nach. Zweitens braucht der
+  // Stillstandshinweis den Blick auf die fertige Spur; mitten in der Schleife
+  // waere sie noch unvollstaendig.
+  if (!hasActiveShare || !activeHike.shareToken || !lastPoint) return;
+  // Kam in diesem Aufruf kein neuer Punkt durch, ist lastPoint unveraendert und
+  // sein Zeitstempel bereits uebertragen - shouldPushToRelay bremst dann von
+  // selbst, ein doppelter Push entsteht nicht.
+  if (!shouldPushToRelay(lastPushedAt, lastPoint.timestamp)) return;
+  lastPushedAt = lastPoint.timestamp;
+
+  // Best-effort: ein einzelner fehlgeschlagener Push (z.B. kein Netz) darf die
+  // lokale Aufzeichnung nicht unterbrechen, daher kein await-Fehlerabbruch.
+  await pushTrackLocation(activeHike.shareToken, {
+    latitude: lastPoint.latitude,
+    longitude: lastPoint.longitude,
+    accuracy: lastPoint.accuracy ?? null,
+    timestamp: lastPoint.timestamp,
+    stationarySince: stationarySince(
+      listRecentTrackPoints(activeHike.id, STANDSTILL_LOOKBACK_POINTS),
+    ),
+  });
 });
 
 /**

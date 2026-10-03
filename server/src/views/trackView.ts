@@ -59,6 +59,7 @@ export function renderTrackView(token: string): string {
   .quality-good { background: #d8e6d2; color: #2c4a2f; }
   .quality-rough { background: #f3e2c2; color: #7a5312; }
   .stale { background: #f0d2d2; color: #8b3a3a; }
+  .standstill { background: #e3ecf5; color: #1f4b73; border-radius: 6px; padding: 10px 12px; margin: 10px 0; line-height: 1.45; }
 </style>
 </head>
 <body>
@@ -84,6 +85,21 @@ export function renderTrackView(token: string): string {
       return 'vor ' + hours + ' Std. ' + rest + ' Min.';
     }
 
+    /** Uhrzeit in der Zeitzone des Lesers - er sitzt im Zweifel daneben im Tal. */
+    function formatClock(ms) {
+      const d = new Date(ms);
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    /** "seit 2 Std. 18 Min." - dieselbe Rundung wie bei formatAge. */
+    function formatDuration(seconds) {
+      const minutes = Math.round(seconds / 60);
+      if (minutes < 60) return 'seit ' + minutes + ' Minuten';
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+      return 'seit ' + hours + ' Std. ' + rest + ' Min.';
+    }
+
     async function refresh() {
       try {
         const res = await fetch('/api/track/' + token);
@@ -101,7 +117,7 @@ export function renderTrackView(token: string): string {
           content.innerHTML = '<p>Noch kein Standort empfangen. Wird gleich aktualisiert...</p>';
           return;
         }
-        const { latitude, longitude, timestamp, accuracy } = data.location;
+        const { latitude, longitude, timestamp, accuracy, stationarySince } = data.location;
         const mapsUrl = 'https://www.google.com/maps?q=' + latitude + ',' + longitude;
         const secondsAgo = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
 
@@ -121,11 +137,27 @@ export function renderTrackView(token: string): string {
           }
         }
 
+        // Steht die Person still, ist das die wichtigste Information auf der
+        // Seite - und sie entschaerft zugleich das lange "Aktualisiert vor ...".
+        // Wer sich nicht bewegt, loest keine neue Standortmessung aus; ohne
+        // diesen Hinweis liest sich eine alte Uhrzeit wie ein totes Telefon.
+        let standstill = '';
+        if (typeof stationarySince === 'number') {
+          const stillSeconds = Math.max(0, Math.round((Date.now() - stationarySince) / 1000));
+          if (stillSeconds >= 300) {
+            standstill =
+              '<p class="standstill"><strong>Person bewegt sich nicht.</strong><br>' +
+              'Position seit ' + formatClock(stationarySince) + ' Uhr unveraendert (' +
+              formatDuration(stillSeconds) + ').</p>';
+          }
+        }
+
         const staleClass = secondsAgo >= 600 ? ' stale' : '';
         content.innerHTML =
           '<p>' + latitude.toFixed(5) + ', ' + longitude.toFixed(5) + '</p>' +
           '<a class="maps-link" href="' + mapsUrl + '" target="_blank" rel="noopener">In Google Maps oeffnen</a>' +
           quality +
+          standstill +
           '<p class="status' + staleClass + '">Aktualisiert ' + formatAge(secondsAgo) + '</p>';
       } catch (e) {
         document.getElementById('content').innerHTML = '<p class="expired">Verbindung fehlgeschlagen.</p>';
