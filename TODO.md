@@ -128,6 +128,20 @@ Zwei Stunden Wanderung, 4,2 km, Garmin/Komoot parallel. Ergebnis in einem Satz: 
 - [ ] **Höhenverfahren an einer echten Bergtour gegenprüfen.** Es ist gegen einen konstruierten Berg abgesichert (dieselben Zeitstempel, dasselbe Rauschen, 800 echte Höhenmeter → gemeldet 758 m), aber echte Daten mit nennenswertem Anstieg fehlen weiterhin. Das ist der wichtigste offene Punkt für die nächste Messung.
 - [ ] Der `<ele>`-Wert im GPX-Export trägt einen systematischen Versatz von rund +40 m (Android misst über dem WGS84-Ellipsoid, Karten rechnen über dem Meeresspiegel; die Geoidundulation beträgt hier rund 48 m). Auf die Höhendifferenz wirkt sich das nicht aus, auf eine absolute Angabe sehr wohl. Solange die App keine absolute Höhe anzeigt, ist es nur eine Ungenauigkeit im Export - dokumentiert, nicht behoben.
 
+## Relay-Server: Ausrollen gehört ab 1.0.4 dazu (03.10.2026)
+
+Der Stillstandshinweis ist die erste Änderung, die **beide Seiten** betrifft. Ein neuer App-Build allein reicht nicht: Ein Server alter Fassung verwirft das Feld `stationarySince` stillschweigend, der Hinweis erschiene also nie, ohne dass irgendwo ein Fehler sichtbar würde.
+
+```
+cd "/mnt/raid/eigene Daten/GitHub/Stephan-Lefty/NaturlustTrailGuide/server" && npx wrangler deploy
+```
+
+Den Befehl muss Stephan selbst ausführen – der Sicherheitsfilter blockt ihn bei mir zuverlässig, wie bei den Werkzeugen von naturlust.net auch.
+
+Gegenprobe nach dem Ausrollen (Link anlegen, Standort mit Stillstand senden, zurücklesen, Link wieder entfernen) – am 03.10.2026 durchgeführt, Feld kommt durch, Anzeigeseite trägt den Text. **Reihenfolge beachten: erst Server, dann App.** Umgekehrt wäre die App kurzzeitig mit einem Server unterwegs, der ihre Meldung nicht kennt.
+
+---
+
 ## Vierte Vergleichsmessung (03.10.2026, Scharnitz – Birzlkapelle – Karwendelsteg)
 
 Sechs Stunden, 10,2 km, endlich mit echten Höhenmetern. Garmin/Komoot parallel. Daraus ist 1.0.4 entstanden. Ausführlich in [docs/fehleranalyse-september-2026.md](docs/fehleranalyse-september-2026.md), Punkte 12 und 13.
