@@ -270,5 +270,6 @@ Am 27.09. lief TrailGuide auf einer echten Tour (Leutasch - Grünkopf - Lauterse
 
 ## Später / optional
 
+- [ ] **Alternative App-Stores prüfen** (Stephans Anstoß 03.10.2026, ausdrücklich „für das nächste Mal"). Zu klären wäre: **F-Droid** (verlangt quelloffenen Code und reproduzierbare Builds – das Repo ist offen, aber der Cloudflare-Relay und die Signierung müssten durchdacht werden), **Accrescent** (klein, aber auf Sicherheit und Datenschutz ausgelegt – passt inhaltlich gut zur App), **Aurora Store** (spiegelt nur Google Play, kein eigener Upload nötig) und **Huawei AppGallery**. Für eine App, die mit Datenschutz wirbt, ist vor allem F-Droid interessant: Dort erwarten die Nutzer genau diese Haltung. Zu bedenken: Jeder zusätzliche Store heißt ein weiterer Veröffentlichungsweg, der bei jeder Version mitgepflegt werden will – und bei F-Droid liegt der Build nicht mehr in unserer Hand.
 - [ ] Umstieg von Cloudflare-Relay auf eigenen EU-Server (z.B. Hetzner, Docker neben bestehender Nextcloud) für den Live-Standort-Link
 - [ ] Ggf. Umstieg von `expo-location`/`expo-task-manager` auf `react-native-background-geolocation` (kostenpflichtig), falls die gelegentlichen Tracking-Lücken (bis zu ~17 Min. bei längerem Stillstand beobachtet) im echten Einsatz zu einem Problem werden
