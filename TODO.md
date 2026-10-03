@@ -128,6 +128,16 @@ Zwei Stunden Wanderung, 4,2 km, Garmin/Komoot parallel. Ergebnis in einem Satz: 
 - [ ] **Höhenverfahren an einer echten Bergtour gegenprüfen.** Es ist gegen einen konstruierten Berg abgesichert (dieselben Zeitstempel, dasselbe Rauschen, 800 echte Höhenmeter → gemeldet 758 m), aber echte Daten mit nennenswertem Anstieg fehlen weiterhin. Das ist der wichtigste offene Punkt für die nächste Messung.
 - [ ] Der `<ele>`-Wert im GPX-Export trägt einen systematischen Versatz von rund +40 m (Android misst über dem WGS84-Ellipsoid, Karten rechnen über dem Meeresspiegel; die Geoidundulation beträgt hier rund 48 m). Auf die Höhendifferenz wirkt sich das nicht aus, auf eine absolute Angabe sehr wohl. Solange die App keine absolute Höhe anzeigt, ist es nur eine Ungenauigkeit im Export - dokumentiert, nicht behoben.
 
+## Release 6 (1.0.4) ist live (03.10.2026)
+
+Eingereicht gegen 19:50 Uhr, veröffentlicht vor 20:19 Uhr. Die Vorabprüfungen dauerten diesmal auffällig lange – die angezeigte Restzeit fiel in acht Minuten nur von 7 auf 6 Minuten –, die eigentliche Prüfung danach wie gewohnt.
+
+- Auf dem Gerät nachgeprüft: `versionCode=6`, `versionName=1.0.4`, `installerPackageName=com.android.vending`, Flags weiterhin ohne `ALLOW_BACKUP`. Es war ein Update, keine Neuinstallation (`firstInstallTime` unverändert) – die Notfallkontakte sind erhalten, die App startete ohne Onboarding und ohne Geister-Aktivität.
+- **Zwei Dinge sind jetzt endgültig als Regel bestätigt, nicht als Einzelfall:** Das hochgeladene AAB lag zum zweiten Mal in Folge nur in der Bundle-Bibliothek und hing an keinem Release. Und der Play Store bot zum dritten Mal in Folge erst nach `adb shell am force-stop com.android.vending` die neue Fassung an. Beides gehört in die Testereinladung.
+- **Signaturen, am Gerät gemessen** (für die Frage nach Fremdstores und einem APK auf der Homepage): Die Store-Fassung ist mit **Googles** Schlüssel signiert (`CN=Android, O=Google Inc.`, SHA-256 `79e3db78…`), nicht mit dem Upload-Keystore (`13:3D:75:E3…`). Ein selbst ausgeliefertes APK trägt den Upload-Schlüssel; Android verweigert dann das Update und verlangt eine Deinstallation – **womit die Notfallkontakte verloren gehen**, weil das Cloud-Backup abgeschaltet ist. Das muss auf jede Downloadseite, sonst verliert jemand seine Kontakte, ohne es zu merken.
+
+---
+
 ## Relay-Server: Ausrollen gehört ab 1.0.4 dazu (03.10.2026)
 
 Der Stillstandshinweis ist die erste Änderung, die **beide Seiten** betrifft. Ein neuer App-Build allein reicht nicht: Ein Server alter Fassung verwirft das Feld `stationarySince` stillschweigend, der Hinweis erschiene also nie, ohne dass irgendwo ein Fehler sichtbar würde.
