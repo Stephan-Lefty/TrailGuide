@@ -128,7 +128,30 @@ Zwei Stunden Wanderung, 4,2 km, Garmin/Komoot parallel. Ergebnis in einem Satz: 
 - [ ] **Höhenverfahren an einer echten Bergtour gegenprüfen.** Es ist gegen einen konstruierten Berg abgesichert (dieselben Zeitstempel, dasselbe Rauschen, 800 echte Höhenmeter → gemeldet 758 m), aber echte Daten mit nennenswertem Anstieg fehlen weiterhin. Das ist der wichtigste offene Punkt für die nächste Messung.
 - [ ] Der `<ele>`-Wert im GPX-Export trägt einen systematischen Versatz von rund +40 m (Android misst über dem WGS84-Ellipsoid, Karten rechnen über dem Meeresspiegel; die Geoidundulation beträgt hier rund 48 m). Auf die Höhendifferenz wirkt sich das nicht aus, auf eine absolute Angabe sehr wohl. Solange die App keine absolute Höhe anzeigt, ist es nur eine Ungenauigkeit im Export - dokumentiert, nicht behoben.
 
-### Testplan für die vierte Vergleichsmessung
+## Vierte Vergleichsmessung (03.10.2026, Scharnitz – Birzlkapelle – Karwendelsteg)
+
+Sechs Stunden, 10,2 km, endlich mit echten Höhenmetern. Garmin/Komoot parallel. Daraus ist 1.0.4 entstanden. Ausführlich in [docs/fehleranalyse-september-2026.md](docs/fehleranalyse-september-2026.md), Punkte 12 und 13.
+
+**Die Messdaten liegen unter `~/Dokumente/TrailGuide-Messungen/`** – nicht im Repo (echte Koordinaten) und nicht im Download-Ordner, aus dem die Dateien vom 30.09. verschwunden sind. Ohne sie fehlt die Vergleichsgrundlage für jede künftige Änderung am Höhenverfahren.
+
+- [x] **Strecke: −2,6 %** gegen die auf unseren Takt ausgedünnte Referenz (10,185 gegen 10,454 km) – das beste Ergebnis bisher. Die Spur liegt im Median 8,2 m neben der Garmin-Uhr, 90 % unter 15,5 m, nur 2 von 1039 Punkten über 50 m daneben.
+- [x] **Drei geteilte Standorte: 1,6 / 10,0 / 11,3 m** neben dem zeitgleichen Garmin-Punkt.
+- [x] **Akku: 6,7 %/h** (98 % auf 56 % über 6,28 h, Bildschirm 4 % der Zeit an). Deckt sich mit den 7,1 % vom 30.09.; eine Tagestour kostet gut 40 %.
+- [x] **Höhenverfahren an echten Höhenmetern geprüft** – der offene Punkt aus der dritten Messung. Ergebnis: +311 statt +244 m, also 27 % zu hoch. Das alte Verfahren hätte +465 ergeben. Die Rast beweist, dass die Glättung arbeitet: drei Stunden am selben Fleck ergeben **+0 Höhenmeter**.
+- [x] **Höhengenauigkeit wird seit 1.0.4 mitgeschrieben**, aber noch nicht ausgewertet. Grund: Drei Höhensprünge von 127–136 m kamen mit einer *horizontalen* Genauigkeit von 2–5 m herein. Die Parametersuche verhielt sich nicht monoton (120 s/30 m → +311, 120 s/40 m → +320, 180 s/30 m → +287) – daran weiterzudrehen hieße, Rauschen zu optimieren.
+- [x] **Stillstandshinweis im Live-Link gebaut** (Stephans Vorgabe 03.10.): „Person bewegt sich nicht. Position seit … Uhr unverändert." Umkreis 25 m, Meldung nach 5 Minuten, beides an der echten Tour geprüft.
+- [ ] **Der allererste Punkt jeder Tour wird ungeprüft übernommen.** Heute meldete er 93 m Genauigkeit und lag 129 m daneben – der schlechteste Punkt der ganzen Tour. Das ist Absicht (ohne Vorgänger gibt es nichts zu vergleichen), aber man könnte ihn durch einen besseren ersetzen, sobald innerhalb der ersten Minute einer kommt. **Noch nicht entschieden.**
+- [ ] Prüfen, ob der strengere Genauigkeitsfilter (30 m, seit 1.0.3) in Wald oder enger Schlucht zu viele Punkte verwirft. Auf dieser Tour war genau ein Punkt über 30 m – und das war der erste.
+
+### Testplan für die fünfte Vergleichsmessung
+
+- [ ] **Die Höhengenauigkeit aus dem GPX auswerten.** Das ist der Hauptzweck dieser Messung: Meldet Android bei den groben Höhensprüngen einen auffälligen Wert? Wenn ja, lässt sich daraus ein Filter bauen und die verbliebenen 27 % angehen. Wenn nein, ist die Höhenangabe mit Bordmitteln nicht weiter zu verbessern – auch das wäre ein Ergebnis und gehört dann ehrlich in die Doku.
+- [ ] **Den Stillstandshinweis im Ernstfall-Nachbau prüfen.** Einmal zehn Minuten wirklich stillhalten (Handy ablegen, nicht in der Hand) und den Live-Link von einem zweiten Gerät beobachten. Erscheint die Meldung, und stimmt die Uhrzeit?
+- [ ] Wieder mehrere Standorte teilen und die Uhrzeiten notieren.
+- [ ] Akkustand bei Start und Ende notieren (Vergleichswerte: 7,1 und 6,7 %/h).
+- [ ] Mit „Es gab einen Vorfall" beenden, sonst löscht die App die Aufzeichnung.
+
+### Testplan für die vierte Vergleichsmessung (erledigt)
 
 Referenzgerät weiterhin mitlaufen lassen - **ja.** Drei Messungen, drei Funde, die ohne Vergleichstrack nie aufgefallen wären. Aufhören lässt sich damit, wenn zwei Touren hintereinander nichts Neues zeigen.
 

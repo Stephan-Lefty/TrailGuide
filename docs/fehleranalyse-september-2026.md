@@ -1,6 +1,6 @@
-# Was drei Vergleichsmessungen zutage gefördert haben
+# Was vier Vergleichsmessungen zutage gefördert haben
 
-Zwischen dem 27. September und dem 1. Oktober 2026 lief NaturlustTrailGuide dreimal auf einer echten Tour parallel zu Vergleichsgeräten mit. Aus diesen Messungen sind die Versionen 1.0.1, 1.0.2 und 1.0.3 entstanden. Dieses Dokument hält fest, was dabei gefunden wurde – nicht als Versionshinweise, sondern als Nachweis, wie die Fehler entdeckt wurden und warum die gewählte Lösung die richtige ist.
+Zwischen dem 27. September und dem 3. Oktober 2026 lief NaturlustTrailGuide viermal auf einer echten Tour parallel zu Vergleichsgeräten mit. Aus diesen Messungen sind die Versionen 1.0.1 bis 1.0.4 entstanden. Dieses Dokument hält fest, was dabei gefunden wurde – nicht als Versionshinweise, sondern als Nachweis, wie die Fehler entdeckt wurden und warum die gewählte Lösung die richtige ist.
 
 Die Reihenfolge ist nach Schwere sortiert, nicht chronologisch. Die gravierendsten Funde standen in keinem Testplan – sie kamen heraus, weil eine Zahl nicht passte.
 
@@ -273,7 +273,73 @@ Bleibt der Empfang längere Zeit schlecht, greift weiterhin die Fünf-Minuten-Re
 
 ---
 
-## 12. Kleinere Lücken, die bei der Auswertung störten
+## 12. Der Live-Link steht still, wenn die Person still steht
+
+**Schwere:** Verfolger kann Rast nicht von totem Telefon unterscheiden
+**Gefunden:** 03.10.2026, vierte Vergleichsmessung (Bergtour)
+**Behoben in:** 1.0.4
+
+### Symptom
+Während einer dreistündigen Rast lieferte Android nur alle 60 bis 630 Sekunden einen Standort. Der Live-Link zeigte in dieser Zeit „Aktualisiert vor 10 Minuten" – und sonst nichts.
+
+### Ursache
+Kein Fehler, sondern eine Folge des Mindestabstands von 10 Metern: Wer sich nicht bewegt, löst keine neue Messung aus. Das ist für die Spur richtig und spart Strom. Für den Live-Link ist es fatal, weil zwei grundverschiedene Lagen identisch aussehen: Jemand macht Pause – oder das Telefon ist aus.
+
+Für eine Notfall-App ist das die denkbar ungünstigste Mehrdeutigkeit. **Wer auf Rettung wartet, bewegt sich per Definition nicht.** Genau im Ernstfall sieht der Verfolger also das Bild, das auch ein ausgefallenes Gerät erzeugt.
+
+### Lösung
+Die App schickt mit jedem Standort, seit wann die Position unverändert ist (`stationarySince`). Bleibt jemand länger als fünf Minuten in einem Umkreis von 25 Metern, zeigt die Seite:
+
+> **Person bewegt sich nicht.** Position seit 13:28 Uhr unverändert (seit 2 Std. 18 Min.).
+
+Zwei Entwurfsentscheidungen dahinter:
+
+**Gemessen wird gegen den letzten Punkt, nicht entlang der Kette.** Sonst gälte eine langsame Wanderung, bei der jeder Schritt unter dem Umkreis bleibt, als Stillstand – und ein Verfolger wäre in falscher Sicherheit.
+
+**Der Hinweis hängt nicht an neuen Übertragungen.** Er steht in den zuletzt übertragenen Daten und bleibt sichtbar, auch wenn die App zehn Minuten lang nichts senden kann. Das ist wichtig, denn genau in dieser Lage kommt ja nichts Neues.
+
+### Warum 25 Meter
+An der Tour durchgerechnet. Bei **15 m** zerfällt die dreistündige Rast in Bruchstücke, weil das Zappeln der Position im Stand den Stillstand immer wieder zurücksetzt. Bei **40 m** zieht der ungenaue erste Punkt der Tour (gemeldet mit 93 m, tatsächlich 129 m daneben) Phasen zusammen, die nicht zusammengehören. Bei **25 m** liefert das Verfahren sechs Phasen, deren längste exakt die Rast von 13:28 bis 15:47 Uhr abdeckt.
+
+---
+
+## 13. Höhenmeter immer noch 27 Prozent zu hoch
+
+**Schwere:** Angezeigte Tourdaten zu hoch, aber nicht mehr absurd
+**Gefunden:** 03.10.2026, vierte Vergleichsmessung
+**Teilweise behoben; die eigentliche Arbeit steht aus**
+
+### Symptom
+Für eine Bergtour mit tatsächlich +244 Höhenmetern meldete die App **+311**. Das alte Verfahren aus 1.0.2 hätte **+465** ergeben – die Glättung aus 1.0.3 hat also zwei Drittel des Fehlers weggenommen, aber nicht alles.
+
+Dass sie grundsätzlich arbeitet, zeigt die Rast: Über drei Stunden am selben Fleck meldet 1.0.3 **+0 Höhenmeter**, das alte Verfahren hätte +25 erfunden. Auch die Bilanz schließt sauber – +311/−308 bei einer Rundtour, die auf 1017 m beginnt und auf 1014 m endet.
+
+### Ursache
+Drei Höhensprünge von **127 bis 136 Metern**, jeder binnen einer Minute, bei einer horizontalen Bewegung von weniger als einem Meter. Gemeldet wurden sie mit einer Genauigkeit von **2 bis 5 Metern** – den besten Werten, die die Tour zu bieten hatte.
+
+Das ist dieselbe Lektion wie bei den Fehlortungen im September, eine Dimension weiter: **Die horizontale Genauigkeit sagt über den Höhenfehler nichts aus.** Unsere Filter können diese Punkte deshalb prinzipiell nicht erkennen.
+
+### Was dabei bewusst NICHT getan wurde
+Die naheliegende Reaktion wäre, Fenster und Schwelle nachzustellen, bis die 311 auf 244 fallen. Durchgerechnet:
+
+| Fenster | Schwelle | Ergebnis |
+|---|---|---|
+| 120 s | 30 m | +311 m |
+| 120 s | 40 m | +320 m |
+| 180 s | 30 m | +287 m |
+| 180 s | 40 m | +320 m |
+
+**Das ist nicht monoton.** Strenger einzustellen macht es mal besser, mal schlechter. Dasselbe beim Aussortieren der Ausreißer: eine Grenze von 60 m bringt +286, eine von 40 m wieder +312. Unterschiede, die sich so verhalten, sind kein Signal, sondern Rauschen – wer hier das beste Paar heraussucht, passt die App an eine einzige Tour an und verschlechtert sie auf der nächsten.
+
+### Lösung für 1.0.4, und was danach kommt
+Android liefert für die Höhe eine **eigene Unsicherheit** mit (`altitudeAccuracy`), und wir haben sie bisher weggeworfen. Seit 1.0.4 steht sie in der Datenbank und im GPX-Export – **ausgewertet wird sie noch nicht.** Erst wenn aus einer echten Tour hervorgeht, wie verlässlich Android sie meldet, lässt sich entscheiden, ob sie als Filter taugt. Das ist der offene Punkt für die fünfte Messung.
+
+### Nebenbefund: ein systematischer Versatz von 44 Metern
+Unsere Höhenspanne (1006–1197 m) liegt rund 44 Meter über der der Referenz (962–1150 m), bei praktisch gleicher Spannweite (192 gegen 188 m). Das ist keine Fehlfunktion, sondern die Geoidundulation – Android misst über dem WGS84-Ellipsoid, Karten rechnen über dem Meeresspiegel. Auf die Höhen*differenz* wirkt sich das nicht aus, auf eine absolute Angabe sehr wohl. Die App zeigt keine an; der `<ele>`-Wert im GPX-Export trägt den Versatz allerdings.
+
+---
+
+## 14. Kleinere Lücken, die bei der Auswertung störten
 
 | Lücke | Wirkung | Lösung |
 |---|---|---|
@@ -305,6 +371,8 @@ Ein Fehlerbericht, der nur Fehler aufzählt, verzerrt das Bild. Drei Dinge wurde
 **Ein gutes Ergebnis ist kein Beweis.** Die 2,3 Prozent der zweiten Messung sahen nach Erfolg aus und waren in Wahrheit zwei Fehler, die sich aufhoben. Erst die Gegenprobe bei gleichem Punktabstand brachte es ans Licht. Bei der dritten Messung wiederholte sich das Muster: −1,3 Prozent auf dem Papier, +7,1 Prozent in Wahrheit.
 
 **Eine gute Zahl in der einen Größe sagt nichts über die andere.** Die dritte Messung hatte die bis dahin beste Streckenangabe und gleichzeitig eine Höhenangabe, die um das Sechzehnfache danebenlag. Beides stammt aus demselben Datenstrom. Wer nur die Kilometer prüft, hält eine App für richtig, die eine Bergtour erfindet.
+
+**Eine gute Zahl kann die falsche Reaktion auslösen.** Die vierte Messung lieferte mit −2,6 % die beste Streckenangabe und gleichzeitig eine Höhenangabe, die 27 % zu hoch lag. Die Versuchung, an den Parametern zu drehen, bis auch die zweite Zahl stimmt, war groß – und falsch. Die Parametersuche verhielt sich nicht monoton, und das ist das Erkennungszeichen dafür, dass man Rauschen optimiert und nicht den Fehler. Die richtige Antwort war, eine fehlende Messgröße nachzurüsten statt an den vorhandenen zu drehen.
 
 **Ein Verfahren gegen einen einzigen Fall zu prüfen, reicht nicht.** Gegen die flache Wanderung allein hätte auch ein Verfahren gut ausgesehen, das am Berg die Hälfte verschluckt – es muss ja nur genug wegwerfen. Erst der zweite, konstruierte Fall mit 800 echten Höhenmetern und derselben Rauschcharakteristik zeigt, ob das Verfahren trennt oder nur unterdrückt. Und erst ein dritter, bewusst bösartiger Fall deckte auf, dass ausgerechnet der naheliegende gleitende Median bei regelmäßigem Wechsel zwischen zwei Werten versagt.
 
