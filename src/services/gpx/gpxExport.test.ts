@@ -75,6 +75,44 @@ describe('buildGpxString', () => {
     expect(gpx).not.toContain('<extensions>');
   });
 
+  it('nimmt die Hoehengenauigkeit mit, wenn sie vorliegt', () => {
+    const gpx = buildGpxString(HIKE, [
+      punkt({ altitude: 1234.56, accuracy: 8.2, altitudeAccuracy: 3.47 }),
+    ]);
+    expect(gpx).toContain('<ntg:altitudeAccuracy>3.5</ntg:altitudeAccuracy>');
+    // Beide Angaben gehoeren in dasselbe extensions-Element, nicht in zwei.
+    expect(gpx.match(/<extensions>/g)).toHaveLength(1);
+  });
+
+  it('schreibt die Hoehengenauigkeit auch ohne horizontale Genauigkeit', () => {
+    // Der umgekehrte Fall darf nicht durchfallen, nur weil bis 1.0.3 allein die
+    // horizontale Genauigkeit darueber entschied, ob es ueberhaupt extensions gibt.
+    const gpx = buildGpxString(HIKE, [punkt({ accuracy: null, altitudeAccuracy: 12.5 })]);
+    expect(gpx).toContain('<extensions>');
+    expect(gpx).toContain('<ntg:altitudeAccuracy>12.5</ntg:altitudeAccuracy>');
+    expect(gpx).not.toContain('<ntg:accuracy>');
+  });
+
+  it('laesst die Hoehengenauigkeit weg, wenn sie fehlt', () => {
+    // So sehen alle Aufzeichnungen vor 1.0.4 aus.
+    const gpx = buildGpxString(HIKE, [punkt({ altitude: 1234.5, accuracy: 8.2 })]);
+    expect(gpx).toContain('<ntg:accuracy>');
+    expect(gpx).not.toContain('<ntg:altitudeAccuracy>');
+  });
+
+  it('haelt die Reihenfolge auch mit beiden Genauigkeiten ein', () => {
+    const gpx = buildGpxString(HIKE, [
+      punkt({ altitude: 1234.5, accuracy: 8.2, altitudeAccuracy: 3.4 }),
+    ]);
+    expect(gpx.indexOf('<ele>')).toBeLessThan(gpx.indexOf('<time>'));
+    expect(gpx.indexOf('<time>')).toBeLessThan(gpx.indexOf('<extensions>'));
+  });
+
+  it('schreibt eine Hoehengenauigkeit von null Metern trotzdem', () => {
+    const gpx = buildGpxString(HIKE, [punkt({ altitudeAccuracy: 0 })]);
+    expect(gpx).toContain('<ntg:altitudeAccuracy>0.0</ntg:altitudeAccuracy>');
+  });
+
   it('schreibt eine Hoehe von null Metern trotzdem', () => {
     // 0 ist ein gueltiger Wert und darf nicht als "fehlt" durchfallen.
     const gpx = buildGpxString(HIKE, [punkt({ altitude: 0, accuracy: 0 })]);

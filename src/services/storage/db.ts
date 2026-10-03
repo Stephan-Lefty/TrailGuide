@@ -80,6 +80,14 @@ const NACHTRAEGLICHE_SPALTEN: { tabelle: string; spalte: string; typ: string }[]
   // eine Hoehenangabe, waehrend Komoot fuer dieselbe Tour +400/-380 m auswies.
   // Altbestand bleibt NULL; die Anzeige laesst die Hoehenmeter dann weg.
   { tabelle: 'track_points', spalte: 'altitude', typ: 'REAL' },
+  // Seit 1.0.4. Android liefert fuer die Hoehe eine eigene Unsicherheit mit, und
+  // die ist eine ganz andere Groesse als die horizontale: Auf der Bergtour vom
+  // 03.10.2026 sprang die gemeldete Hoehe dreimal um 127 bis 136 Meter, waehrend
+  // das Geraet die Position auf 2 bis 5 Meter genau angab. Diese Spruenge machen
+  // den Unterschied zwischen den gemeldeten +311 und den tatsaechlichen +244
+  // Hoehenmetern aus. Vorerst wird nur aufgezeichnet - ob sich daraus ein Filter
+  // bauen laesst, muss die naechste Vergleichsmessung zeigen.
+  { tabelle: 'track_points', spalte: 'altitude_accuracy', typ: 'REAL' },
 ];
 
 function spaltenNachziehen(db: SQLite.SQLiteDatabase): void {
