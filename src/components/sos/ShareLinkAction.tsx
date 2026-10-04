@@ -124,9 +124,16 @@ export function ShareLinkAction({ hike }: ShareLinkActionProps) {
     const url = await liveShare.start();
     if (url) {
       await Share.share({ message: t('sos.liveShareMessage', { url }) });
-    } else if (liveShare.status === 'error') {
-      Alert.alert(t('sos.liveShareErrorTitle'), t('sos.liveShareError'));
+      return;
     }
+    // Bewusst am Rueckgabewert entschieden und nicht an liveShare.status:
+    // Der stammt aus dem Render, der diese Funktion erzeugt hat, und ist nach
+    // dem await veraltet. Beim Geraetetest am 04.10.2026 fiel das auf - der
+    // erste Fehlversuch blieb stumm, der Knopf sprang kommentarlos zurueck.
+    // Erst beim zweiten erschien die Meldung, weil die Closure dann den
+    // Fehlerzustand des ersten Versuchs trug. Ausgerechnet der erste
+    // Fehlschlag ist aber der, bei dem jemand eine Erklaerung braucht.
+    Alert.alert(t('sos.liveShareErrorTitle'), t('sos.liveShareError'));
   }
 
   return (
