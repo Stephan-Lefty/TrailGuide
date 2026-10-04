@@ -13,6 +13,7 @@ import {
   stopBackgroundLocationTracking,
   type StartTrackingResult,
 } from '../services/location/backgroundLocationService';
+import { stopLiveShare } from '../services/sharing/shareLinkService';
 import type { Hike } from '../types/hike';
 
 export function useActiveHike() {
@@ -131,6 +132,37 @@ export function useActiveHike() {
       } catch {
         // Bewusst geschluckt: Der Status wird unten in jedem Fall gesetzt.
       }
+
+      // Der Live-Link muss mit der Aktivitaet enden.
+      //
+      // Bis 1.0.4 geschah das nicht: Der Token blieb bis zum Ablauf seiner
+      // festen Laufzeit auf dem Relay erreichbar - standardmaessig sechs
+      // Stunden - und zeigte weiter die zuletzt uebertragene Position. Noch
+      // unangenehmer war die Folge daraus: Weil der Token an der Aktivitaet
+      // haengt, fand die App ihn nach dem Beenden nicht mehr. Der Nutzer hatte
+      // damit keinen Weg mehr, seinen eigenen Link loszuwerden.
+      //
+      // Fuer eine App, die zusagt, nach einer normalen Tour bleibe nichts
+      // zurueck, war das derselbe Widerspruch wie seinerzeit das
+      // Android-Cloud-Backup. Gefunden am 04.10.2026, als Stephan nach einer
+      // Radtour fragte, ob sein Standort noch geteilt werde.
+      //
+      // Absichtlich aus der Datenbank gelesen statt aus dem State: Der Link
+      // kann in einem anderen Screen gestartet worden sein, ohne dass dieser
+      // Hook seitdem aktualisiert hat.
+      const aktuell = getActiveHike();
+      const token = aktuell?.id === hike.id ? aktuell.shareToken : hike.shareToken;
+      if (token) {
+        try {
+          await stopLiveShare(hike.id, token);
+        } catch {
+          // Best-effort wie beim Tracking. Am Ende einer Bergtour ohne Netz
+          // dazustehen ist der Normalfall, und daran darf das Beenden nicht
+          // scheitern. Die feste Ablaufzeit des Tokens bleibt als letzte
+          // Rueckfallebene - sie ist der Grund, warum es sie gibt.
+        }
+      }
+
       stopBatteryMonitoring();
       stopConnectivityMonitoring();
       updateHikeStatus(hike.id, hadIncident ? 'ended_incident' : 'ended_normal', Date.now());

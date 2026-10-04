@@ -53,10 +53,47 @@ export async function pushTrackLocation(token: string, location: RelayLocation):
   }
 }
 
-export async function revokeTrackLink(token: string): Promise<void> {
+/**
+ * So lange wird hoechstens auf den Widerruf gewartet.
+ *
+ * Seit 1.0.5 wird der Live-Link beim Beenden einer Aktivitaet widerrufen - und
+ * damit haengt dieser Aufruf im Weg des Nutzers, der gerade "Aktivitaet
+ * beenden" getippt hat. Ohne Zeitlimit wartet `fetch` am Ende einer Bergtour
+ * ohne Netz unter Umstaenden eine Minute oder laenger, und solange stuende die
+ * App. Lieber ein nicht widerrufener Token - dessen feste Ablaufzeit greift
+ * ohnehin - als eine App, die sich beim Beenden aufhaengt.
+ */
+/**
+ * Die Adresse, unter der ein Token zu sehen ist.
+ *
+ * Normalerweise kommt sie beim Anlegen vom Relay zurueck. Gespeichert wird sie
+ * aber nicht - in der Datenbank steht nur der Token. Wer einen laufenden Link
+ * aus einer frueheren Sitzung wiederfindet, braucht sie trotzdem, sonst steht
+ * in der App ein aktiver Link ohne Adresse und ohne Abschalt-Knopf.
+ */
+export function buildViewUrl(token: string): string {
+  return `${RELAY_BASE_URL}/view/${token}`;
+}
+
+export const REVOKE_TIMEOUT_MS = 5000;
+
+/**
+ * Widerruft einen Live-Link. Wirft nie und wartet hoechstens
+ * REVOKE_TIMEOUT_MS - beides, weil der Aufrufer im Beenden-Pfad steht.
+ */
+export async function revokeTrackLink(token: string): Promise<boolean> {
+  const abbruch = new AbortController();
+  const wecker = setTimeout(() => abbruch.abort(), REVOKE_TIMEOUT_MS);
   try {
-    await fetch(`${RELAY_BASE_URL}/api/track/${token}/revoke`, { method: 'POST' });
+    const res = await fetch(`${RELAY_BASE_URL}/api/track/${token}/revoke`, {
+      method: 'POST',
+      signal: abbruch.signal,
+    });
+    return res.ok;
   } catch {
-    // Revoke ist best-effort: der Token laeuft ohnehin spaetestens zur festen Ablaufzeit ab.
+    // Best-effort: der Token laeuft spaetestens zur festen Ablaufzeit ab.
+    return false;
+  } finally {
+    clearTimeout(wecker);
   }
 }

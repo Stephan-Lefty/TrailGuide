@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { pushTrackLocation } from '../services/sharing/relayApiClient';
+import { buildViewUrl, pushTrackLocation } from '../services/sharing/relayApiClient';
 import { startLiveShare, stopLiveShare } from '../services/sharing/shareLinkService';
 import type { Hike } from '../types/hike';
 
@@ -30,6 +30,57 @@ export function useShareLink(hike: Hike | null): UseShareLinkResult {
   const [token, setToken] = useState<string | null>(hike?.shareToken ?? null);
   const [viewUrl, setViewUrl] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(hike?.shareExpiresAt ?? null);
+
+  /**
+   * Token, die in dieser Sitzung bewusst abgeschaltet wurden.
+   *
+   * Noetig, weil das hereingereichte `hike`-Objekt nach dem Abschalten noch
+   * eine Weile den alten Token traegt - es wird nicht sofort neu geladen. Ohne
+   * dieses Gedaechtnis wuerde der Abgleich unten den gerade widerrufenen Token
+   * im naechsten Durchlauf wieder uebernehmen, und der Link saehe in der App
+   * weiter aktiv aus, obwohl er es nicht mehr ist.
+   */
+  const abgeschaltet = useRef<Set<string>>(new Set());
+
+  /**
+   * Gleicht den Zustand mit der hereingereichten Tour ab.
+   *
+   * Ohne diesen Abgleich war der Abschalt-Knopf wirkungslos, und zwar im
+   * Regelfall: `useActiveHike` laedt die Tour in einem Effekt, beim ersten
+   * Rendern ist sie deshalb **immer** null. Die Anfangswerte von `useState`
+   * oben greifen aber nur bei genau diesem ersten Rendern - kommt die Tour
+   * einen Augenblick spaeter mit einem laufenden Link herein, bleibt der Hook
+   * auf 'idle' und `token` auf null. `stop()` steigt dann sofort wieder aus,
+   * und der Nutzer kann seinen eigenen Live-Link nicht mehr widerrufen,
+   * obwohl der Knopf vor ihm steht. Betroffen war jeder, der den SOS-Bereich
+   * zwischendurch verlassen oder die App neu gestartet hat.
+   *
+   * Uebernommen wird nur, wenn der Hook selbst noch keinen Token hat. Sonst
+   * wuerde ein gerade frisch gestarteter Link vom veralteten `hike`-Objekt
+   * wieder ueberschrieben - das Objekt wird nach dem Start nicht neu geladen.
+   */
+  useEffect(() => {
+    if (!hike) {
+      setToken(null);
+      setViewUrl(null);
+      setExpiresAt(null);
+      setStatus('idle');
+      return;
+    }
+    if (token) return;
+
+    const laeuftNoch = Boolean(hike.shareToken) && (hike.shareExpiresAt ?? 0) > Date.now();
+    if (!laeuftNoch) return;
+
+    const gefunden = hike.shareToken as string;
+    if (abgeschaltet.current.has(gefunden)) return;
+    setToken(gefunden);
+    // Die Adresse steht nicht in der Datenbank, nur der Token - ohne sie
+    // blendet die Oberflaeche den Abschalt-Knopf aus.
+    setViewUrl(buildViewUrl(gefunden));
+    setExpiresAt(hike.shareExpiresAt ?? null);
+    setStatus('active');
+  }, [hike, token]);
 
   const start = useCallback(
     async (ttlMinutes: number = DEFAULT_TTL_MINUTES): Promise<string | null> => {
@@ -69,6 +120,9 @@ export function useShareLink(hike: Hike | null): UseShareLinkResult {
 
   const stop = useCallback(async () => {
     if (!hike || !token) return;
+    // Vor dem Abschalten vormerken, nicht danach: Sonst koennte der Abgleich
+    // oben in der Zwischenzeit zuschlagen und den Token wieder uebernehmen.
+    abgeschaltet.current.add(token);
     await stopLiveShare(hike.id, token);
     setToken(null);
     setViewUrl(null);
