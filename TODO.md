@@ -168,13 +168,26 @@ Die Ironie: Der Kommentar über dem Hook erklärte genau diese Gefahr („`hike`
 
 Zwei weitere Fehler, die kein Unit-Test hätte finden können. Beide hängen an einer Netzeigenschaft des Testgeräts:
 
-**Auf dem Mobilfunknetz ist IPv6 vollständig unerreichbar** – 100 % Paketverlust zum Relay, während IPv4 bei 38 ms liegt. Android löst den Relay-Namen als AAAA auf, läuft ins Leere und fällt erst nach dem TCP-Timeout auf IPv4 zurück.
+**Im WLAN „NaturlustNet" ist IPv6 kaputt.** Der Router vergibt eine echte globale IPv6-Adresse (`2001:4bb8:…`), das Gerät hält IPv6 also für benutzbar – aber TCP über IPv6 läuft ins Leere:
+
+```
+TCP über IPv6 (Port 443):  Timeout, keine Verbindung
+TCP über IPv4 (Port 443):  verbunden
+```
+
+Android versucht deshalb zuerst IPv6 und fällt erst nach dem TCP-Timeout auf IPv4 zurück. Das erklärt die fünf Minuten.
+
+**Korrektur einer Fehlzuordnung:** Zuerst stand hier „Mobilfunknetz". Das war falsch – alle Messungen am 04.10.2026 liefen über das Heim-WLAN, das Gerät hing die ganze Zeit an „NaturlustNet". Stephans Einwand brachte es ans Licht: Auf der Radtour desselben Tages, unterwegs über Mobilfunk, **hat** der Live-Link funktioniert. **Über Mobilfunk-IPv6 liegt keine einzige Messung vor.** Für die Praxis heißt das: Der Fall trifft eher zu Hause beim Ausprobieren als unterwegs im Ernstfall.
+
+Nebenbefund für Stephan selbst: Ein WLAN, das IPv6 bewirbt und dann nicht liefert, bremst **jede** Verbindung zu einem Server mit AAAA-Eintrag beim ersten Zugriff aus – nicht nur unsere App. Ein Blick in die Router-Einstellungen lohnt sich unabhängig von diesem Projekt.
 
 - [x] **Das Starten hing fünf Minuten.** Der Knopf zeigte „Wird gestartet…", ohne Rückmeldung und ohne Abbruch; der Link wurde am Ende sogar angelegt, nur hatte das niemand mehr mitbekommen. `createTrackLink` hat jetzt ein Zeitlimit von 20 Sekunden – danach scheitert der Versuch ehrlich und der Knopf wird wieder bedienbar.
 - [x] **Mein eigenes 5-Sekunden-Limit für den Widerruf war zu knapp** und würgte ihn jedes Mal ab: Die App vergaß den Link, der Token lebte weiter. Der Widerruf blockiert jetzt gar nicht mehr – lokal wird sofort vergessen, der Widerruf läuft nebenher – und darf deshalb großzügige 30 Sekunden brauchen.
 - [x] **Der erste Fehlversuch blieb stumm.** `liveShare.status` stammt aus dem Render, der die Funktion erzeugt hat, und ist nach dem `await` veraltet. Die Meldung erschien erst ab dem zweiten Versuch, weil die Closure dann den Fehlerzustand des ersten trug. Jetzt entscheidet der Rückgabewert.
 
-- [ ] **Der eigentliche Grund liegt aber nicht in der App.** Solange der Relay unter einer Adresse mit AAAA-Eintrag erreichbar ist, trifft jedes Gerät mit kaputtem IPv6 dieselbe Wand – und auf diesem Netz ließ sich der Live-Link **gar nicht** starten. Zu prüfen wäre ein eigener Name auf naturlust.net mit **reinem IPv4-Eintrag** (bei Cloudflare über die IPv6-Kompatibilität der Zone abschaltbar). Das ist eine Infrastruktur-Entscheidung, keine Codeänderung, und sie gehört vor die Einladung weiterer Tester. **Einschränkung:** Dass IPv6 die alleinige Ursache ist, ist nicht bewiesen – gemessen sind der Paketverlust, die fünf Minuten und die zwei Zeitüberschreitungen.
+- [ ] **Der eigentliche Grund liegt nicht in der App, sondern im Netz des Nutzers.** Solange der Relay unter einer Adresse mit AAAA-Eintrag erreichbar ist, trifft jedes Gerät in einem Netz mit kaputtem IPv6 dieselbe Wand. Zu prüfen wäre ein eigener Name auf naturlust.net mit **reinem IPv4-Eintrag** (bei Cloudflare über die IPv6-Kompatibilität der Zone abschaltbar). Das ist eine Infrastruktur-Entscheidung, keine Codeänderung.
+  - **Wie dringend, ist offen.** Bekannt ist genau ein betroffenes Netz: Stephans Heim-WLAN. Ob das bei Testern verbreitet ist, weiß niemand. Vor einer Umstellung wäre zu klären, was man sich damit einhandelt – ein IPv4-only-Relay schließt Netze aus, die irgendwann nur noch IPv6 sprechen.
+  - Umgekehrt ist der Fall im Ernstfall der harmlosere: Zu Hause beim Ausprobieren stört es, unterwegs lief es.
 - [ ] Die Verfolgerseite schreibt „unveraendert" und „oeffnen" ohne Umlaute. Innerhalb der Datei konsequent, aber es ist die Seite, die eine Bergrettung zu sehen bekommt – dort gehören richtige Umlaute hin.
 
 - [ ] Prüfen, ob ein verwaister Token sich auch ohne die App widerrufen lässt (Relay-Endpunkt `POST /api/track/:token/revoke` existiert und braucht keine Anmeldung – das ist einerseits der Notausgang, andererseits selbst eine Frage wert).

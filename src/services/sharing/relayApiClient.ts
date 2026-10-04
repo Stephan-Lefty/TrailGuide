@@ -99,12 +99,15 @@ export function buildViewUrl(token: string): string {
  * Zeit zu sparen.
  *
  * Der Wert stand zunaechst bei 5 Sekunden. Der Geraetetest am 04.10.2026 hat
- * vorgefuehrt, warum das zu wenig ist: Auf dem Mobilfunknetz des Testgeraets
- * war IPv6 vollstaendig unerreichbar (100 % Paketverlust), IPv4 dagegen bei
- * 38 ms. Android loest den Relay-Namen als AAAA auf, laeuft ins Leere und
- * faellt erst nach dem TCP-Timeout auf IPv4 zurueck. Der erste Aufruf brauchte
- * dadurch fuenf Minuten - nach 5 Sekunden abzubrechen hiess schlicht: Der
- * Widerruf kam nie an, und der Token lebte weiter.
+ * vorgefuehrt, warum das zu wenig ist: Im WLAN des Testgeraets bewarb der
+ * Router IPv6 als benutzbar - eine globale Adresse war da -, aber TCP darueber
+ * lief ins Leere, waehrend IPv4 sofort verband. Android versucht deshalb
+ * zuerst IPv6 und faellt erst nach dem TCP-Timeout zurueck; der erste Aufruf
+ * brauchte dadurch fuenf Minuten. Nach 5 Sekunden abzubrechen hiess schlicht:
+ * Der Widerruf kam nie an, und der Token lebte weiter.
+ *
+ * Wichtig fuer die Einordnung: Betroffen war das Heim-WLAN. Auf der Radtour
+ * desselben Tages, unterwegs ueber Mobilfunk, funktionierte der Live-Link.
  */
 export const REVOKE_TIMEOUT_MS = 30_000;
 
