@@ -128,6 +128,27 @@ Zwei Stunden Wanderung, 4,2 km, Garmin/Komoot parallel. Ergebnis in einem Satz: 
 - [ ] **Höhenverfahren an einer echten Bergtour gegenprüfen.** Es ist gegen einen konstruierten Berg abgesichert (dieselben Zeitstempel, dasselbe Rauschen, 800 echte Höhenmeter → gemeldet 758 m), aber echte Daten mit nennenswertem Anstieg fehlen weiterhin. Das ist der wichtigste offene Punkt für die nächste Messung.
 - [ ] Der `<ele>`-Wert im GPX-Export trägt einen systematischen Versatz von rund +40 m (Android misst über dem WGS84-Ellipsoid, Karten rechnen über dem Meeresspiegel; die Geoidundulation beträgt hier rund 48 m). Auf die Höhendifferenz wirkt sich das nicht aus, auf eine absolute Angabe sehr wohl. Solange die App keine absolute Höhe anzeigt, ist es nur eine Ungenauigkeit im Export - dokumentiert, nicht behoben.
 
+## FEHLER: Der Live-Link überlebt das Beenden der Aktivität (gefunden 04.10.2026)
+
+**Schwere: hoch.** Widerspricht der Kernzusage der App.
+
+`endHike` in `src/hooks/useActiveHike.ts` stoppt die Aufzeichnung, löscht die Standortpunkte und entfernt den Tourkontakt – **ruft aber `stopLiveShare` nie auf.** Die Funktion `revokeTrackLink` existiert und funktioniert, sie wird an dieser Stelle schlicht nicht verwendet.
+
+Folgen:
+- Der Token bleibt auf dem Relay, bis seine Laufzeit abläuft – **standardmäßig sechs Stunden** (`DEFAULT_TTL_MINUTES = 360`, Obergrenze 24 h).
+- Der Link zeigt weiter die zuletzt übertragene Position. Sie ist eingefroren, aber abrufbar.
+- **Die App kann ihn danach nicht mehr widerrufen**, weil der Token an der Aktivität hängt und `useShareLink` ohne aktive Tour nichts findet. Der Nutzer hat keinen Weg mehr, ihn loszuwerden.
+
+Gefunden, weil Stephan nach der Radtour am 04.10.2026 fragte, ob sein Standort noch geteilt wird. Die Tour endete 16:42 Uhr, der Link wäre bis rund 22:42 Uhr erreichbar gewesen.
+
+Das ist derselbe Widerspruch wie seinerzeit beim Android-Cloud-Backup: Die App verspricht, dass nach einer normalen Tour nichts zurückbleibt, und lässt dann doch etwas zurück.
+
+- [ ] **Fix für 1.0.5, mit Vorrang vor allem anderen:** Beim Beenden einer Aktivität den Live-Link mitwiderrufen – bei Vorfall wie ohne. Der Widerruf ist best-effort (kein Netz darf das Beenden nicht blockieren), aber der Token muss zusätzlich lokal gelöscht werden, damit kein Zombie zurückbleibt.
+- [ ] Prüfen, ob ein verwaister Token sich auch ohne die App widerrufen lässt (Relay-Endpunkt `POST /api/track/:token/revoke` existiert und braucht keine Anmeldung – das ist einerseits der Notausgang, andererseits selbst eine Frage wert).
+- [ ] Überlegen, ob die Standardlaufzeit von sechs Stunden zu lang ist. Sie stammt aus der Annahme einer Tageswanderung; nach dem Fix wäre sie nur noch für den Fall relevant, dass die App beim Beenden kein Netz hat.
+
+---
+
 ## Release 6 (1.0.4) ist live (03.10.2026)
 
 Eingereicht gegen 19:50 Uhr, veröffentlicht vor 20:19 Uhr. Die Vorabprüfungen dauerten diesmal auffällig lange – die angezeigte Restzeit fiel in acht Minuten nur von 7 auf 6 Minuten –, die eigentliche Prüfung danach wie gewohnt.
