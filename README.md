@@ -68,6 +68,15 @@ npm run deploy           # Deployment zu Cloudflare
 
 Bezieht sich auf die Versionsnummer der App (`app.json`/`package.json`).
 
+### 1.0.5
+Eine Rückfrage von Stephan nach der Radtour vom 04.10.2026 – „kann es sein, dass der Live-Standort immer noch geteilt wird?" – hat eine ganze Kette von Fehlern rund um den Live-Standort-Link aufgedeckt. Alle vier betrafen dasselbe Versprechen: dass eine Freigabe endet, wenn man sie beendet.
+- **Der Live-Link überlebte das Beenden der Aktivität.** Die Aufzeichnung stoppte, die Standortpunkte wurden gelöscht, der Tourkontakt entfernt – nur der Link blieb auf dem Server, bis seine Laufzeit ablief: standardmäßig sechs Stunden. Er zeigte weiter die zuletzt übertragene Position. Für eine App, die zusagt, nach einer normalen Tour bleibe nichts zurück, war das derselbe Widerspruch wie seinerzeit das Android-Cloud-Backup.
+- **Der Abschalt-Knopf war im Regelfall wirkungslos** – der schwerere der beiden Fehler. Hatte man den SOS-Bereich zwischendurch verlassen oder die App neu gestartet, zeigte sie gar keinen aktiven Link mehr an. Man wusste also nicht einmal, dass es etwas abzuschalten gab, und der Knopf dafür war verschwunden.
+- **Das Starten konnte endlos hängen.** Beim Test auf einem Mobilfunknetz, in dem IPv6 unerreichbar war, brauchte der erste Serveraufruf **fünf Minuten**. Der Knopf zeigte die ganze Zeit „Wird gestartet…", ohne Rückmeldung und ohne Abbruch. Jetzt gilt der Versuch nach 20 Sekunden als gescheitert, der Knopf wird wieder bedienbar. Das Beenden wiederum wartet gar nicht mehr auf das Netz: Die App vergisst den Link sofort und schickt den Widerruf nebenher los.
+- **Der erste Fehlversuch blieb stumm.** Die Meldung „Live-Tracking nicht verfügbar" erschien erst ab dem zweiten – ausgerechnet beim ersten, wo eine Erklärung am nötigsten ist, sprang der Knopf kommentarlos zurück.
+
+Gefunden wurden die letzten beiden Punkte erst beim Durchspielen am echten Gerät. Die Tests davor waren grün und deckten die Logik ab – was sie nicht abdecken konnten, war ein Mobilfunknetz, auf dem der Server minutenlang nicht antwortet.
+
 ### 1.0.4
 Ausgelöst durch die vierte Vergleichsmessung: eine sechsstündige Bergtour mit parallel laufender Garmin-Uhr (03.10.2026) – endlich eine mit echten Höhenmetern. Die Strecke war mit **−2,6 %** das beste Ergebnis bisher, die drei geteilten Standorte lagen 1,6 / 10,0 / 11,3 Meter neben der Referenz. Die Höhenangabe hat sich gegenüber 1.0.2 mehr als halbiert, stimmt aber noch nicht: +311 statt +244 Metern.
 - **Die Höhengenauigkeit wird jetzt mitgeschrieben.** Sie steht in der Datenbank und im GPX-Export, wird aber noch nicht ausgewertet. Der Grund für diese Zurückhaltung steckt in den Messdaten: Dreimal sprang die gemeldete Höhe binnen einer Minute um 127 bis 136 Meter, während sich die Position um weniger als einen Meter bewegte und das Gerät eine *horizontale* Genauigkeit von 2 bis 5 Metern meldete. Diese Sprünge machen den Großteil der verbliebenen Abweichung aus, und mit der horizontalen Angabe allein sind sie nicht zu finden. Android liefert für die Höhe eine eigene Unsicherheit mit – bisher haben wir sie weggeworfen.

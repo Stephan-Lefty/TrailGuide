@@ -162,7 +162,20 @@ Die Ironie: Der Kommentar über dem Hook erklärte genau diese Gefahr („`hike`
   - Übernommen wird nur, wenn der Hook selbst noch keinen Token hat – sonst überschriebe das veraltete `hike`-Objekt einen gerade frisch gestarteten Link.
   - **Abgeschaltete Token werden gemerkt.** In diese Falle bin ich beim Bauen selbst gelaufen: Nach `stop()` trägt das hereingereichte Objekt noch eine Weile den alten Token, und der Abgleich hat ihn prompt wieder übernommen – der Link sah weiter aktiv aus, obwohl er widerrufen war. Ein Test hält das jetzt fest.
   - Die Adresse wird aus dem Token rekonstruiert (`buildViewUrl`). Sie steht nicht in der Datenbank, und die Oberfläche blendet den Abschalt-Knopf ohne sie aus – ein übernommener Link wäre sonst weiterhin nicht abschaltbar gewesen.
-- [ ] **Noch ungeprüft am Gerät.** Beide Korrekturen sind durch 13 Tests abgedeckt, aber der Ablauf „Link starten, SOS verlassen, zurückkommen, abschalten" ist noch nicht am Handy durchgespielt.
+- [x] **Am Gerät durchgespielt (04.10.2026).** Nach einem App-Neustart erkennt die App den laufenden Link, baut die Adresse wieder auf und zeigt „Freigabe beenden" – genau der Knopf, der vorher fehlte. Der Stillstandshinweis stand dabei auch gleich auf der Verfolgerseite: *„Person bewegt sich nicht. Position seit 19:00 Uhr unveraendert (seit 19 Minuten)."*
+
+### Was erst der Gerätetest gezeigt hat: das Netz
+
+Zwei weitere Fehler, die kein Unit-Test hätte finden können. Beide hängen an einer Netzeigenschaft des Testgeräts:
+
+**Auf dem Mobilfunknetz ist IPv6 vollständig unerreichbar** – 100 % Paketverlust zum Relay, während IPv4 bei 38 ms liegt. Android löst den Relay-Namen als AAAA auf, läuft ins Leere und fällt erst nach dem TCP-Timeout auf IPv4 zurück.
+
+- [x] **Das Starten hing fünf Minuten.** Der Knopf zeigte „Wird gestartet…", ohne Rückmeldung und ohne Abbruch; der Link wurde am Ende sogar angelegt, nur hatte das niemand mehr mitbekommen. `createTrackLink` hat jetzt ein Zeitlimit von 20 Sekunden – danach scheitert der Versuch ehrlich und der Knopf wird wieder bedienbar.
+- [x] **Mein eigenes 5-Sekunden-Limit für den Widerruf war zu knapp** und würgte ihn jedes Mal ab: Die App vergaß den Link, der Token lebte weiter. Der Widerruf blockiert jetzt gar nicht mehr – lokal wird sofort vergessen, der Widerruf läuft nebenher – und darf deshalb großzügige 30 Sekunden brauchen.
+- [x] **Der erste Fehlversuch blieb stumm.** `liveShare.status` stammt aus dem Render, der die Funktion erzeugt hat, und ist nach dem `await` veraltet. Die Meldung erschien erst ab dem zweiten Versuch, weil die Closure dann den Fehlerzustand des ersten trug. Jetzt entscheidet der Rückgabewert.
+
+- [ ] **Der eigentliche Grund liegt aber nicht in der App.** Solange der Relay unter einer Adresse mit AAAA-Eintrag erreichbar ist, trifft jedes Gerät mit kaputtem IPv6 dieselbe Wand – und auf diesem Netz ließ sich der Live-Link **gar nicht** starten. Zu prüfen wäre ein eigener Name auf naturlust.net mit **reinem IPv4-Eintrag** (bei Cloudflare über die IPv6-Kompatibilität der Zone abschaltbar). Das ist eine Infrastruktur-Entscheidung, keine Codeänderung, und sie gehört vor die Einladung weiterer Tester. **Einschränkung:** Dass IPv6 die alleinige Ursache ist, ist nicht bewiesen – gemessen sind der Paketverlust, die fünf Minuten und die zwei Zeitüberschreitungen.
+- [ ] Die Verfolgerseite schreibt „unveraendert" und „oeffnen" ohne Umlaute. Innerhalb der Datei konsequent, aber es ist die Seite, die eine Bergrettung zu sehen bekommt – dort gehören richtige Umlaute hin.
 
 - [ ] Prüfen, ob ein verwaister Token sich auch ohne die App widerrufen lässt (Relay-Endpunkt `POST /api/track/:token/revoke` existiert und braucht keine Anmeldung – das ist einerseits der Notausgang, andererseits selbst eine Frage wert).
 - [ ] Überlegen, ob die Standardlaufzeit von sechs Stunden zu lang ist. Sie stammt aus der Annahme einer Tageswanderung; nach dem Fix wäre sie nur noch für den Fall relevant, dass die App beim Beenden kein Netz hat.

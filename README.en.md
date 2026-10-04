@@ -68,6 +68,15 @@ npm run deploy           # deploy to Cloudflare
 
 Refers to the app's version number (`app.json`/`package.json`).
 
+### 1.0.5
+A question from Stephan after the bike tour of 04.10.2026 — "could it be that my live location is still being shared?" — uncovered a whole chain of defects around the live location link. All four concerned the same promise: that a share ends when you end it.
+- **The live link survived ending the activity.** Recording stopped, the track points were deleted, the tour contact was removed — only the link stayed on the server until its lifetime ran out: six hours by default. It kept showing the last transmitted position. For an app that promises nothing is left behind after a normal tour, that was the same contradiction as the Android cloud backup once was.
+- **The stop button was ineffective in the normal case** — the more serious of the two. If you had left the SOS area in between, or restarted the app, it showed no active link at all. So you did not even know there was something to switch off, and the button for it was gone.
+- **Starting could hang indefinitely.** During testing on a mobile network where IPv6 was unreachable, the first server call took **five minutes**. The button showed "starting…" the whole time, with no feedback and no way to cancel. The attempt now fails after 20 seconds and the button becomes usable again. Stopping no longer waits for the network at all: the app forgets the link immediately and sends the revocation alongside.
+- **The first failed attempt was silent.** The message "live tracking unavailable" only appeared from the second attempt onwards — on the first, where an explanation matters most, the button simply sprang back without comment.
+
+The last two were only found by walking through the flow on a real device. The tests before that were green and covered the logic; what they could not cover was a mobile network on which the server does not answer for minutes.
+
 ### 1.0.4
 Triggered by the fourth comparison measurement: a six-hour mountain tour with a Garmin watch running in parallel (03.10.2026) — at last one with real elevation gain. Distance was the best result so far at **−2.6 %**, and the three shared locations landed 1.6 / 10.0 / 11.3 metres from the reference. Elevation gain has more than halved compared to 1.0.2 but is still wrong: +311 instead of +244 metres.
 - **Vertical accuracy is now recorded.** It goes into the database and the GPX export but is not yet evaluated. The reason for that restraint is in the measurement data: three times the reported altitude jumped by 127 to 136 metres within a minute while the position moved less than one metre and the device reported a *horizontal* accuracy of 2 to 5 metres. Those jumps account for most of the remaining error, and the horizontal figure cannot find them. Android supplies a separate uncertainty for altitude — until now we threw it away.
