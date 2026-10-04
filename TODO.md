@@ -143,7 +143,27 @@ Gefunden, weil Stephan nach der Radtour am 04.10.2026 fragte, ob sein Standort n
 
 Das ist derselbe Widerspruch wie seinerzeit beim Android-Cloud-Backup: Die App verspricht, dass nach einer normalen Tour nichts zurückbleibt, und lässt dann doch etwas zurück.
 
-- [ ] **Fix für 1.0.5, mit Vorrang vor allem anderen:** Beim Beenden einer Aktivität den Live-Link mitwiderrufen – bei Vorfall wie ohne. Der Widerruf ist best-effort (kein Netz darf das Beenden nicht blockieren), aber der Token muss zusätzlich lokal gelöscht werden, damit kein Zombie zurückbleibt.
+- [x] **Behoben am 04.10.2026.** `endHike` widerruft den Live-Link jetzt, bei Vorfall wie ohne. Drei Dinge waren dabei zu beachten:
+  - **Der Token wird frisch aus der Datenbank gelesen**, nicht aus dem State des Hooks – der Link kann in einem anderen Screen gestartet worden sein, ohne dass dieser Hook seitdem aktualisiert hat.
+  - **`revokeTrackLink` hat jetzt ein Zeitlimit von 5 Sekunden.** Das war beim Bauen die eigentliche Gefahr: Der Aufruf steht im Weg des Nutzers, der gerade „Aktivität beenden" getippt hat, und `fetch` ohne Zeitlimit kann am Ende einer Bergtour ohne Netz minutenlang hängen. Lieber ein nicht widerrufener Token – dessen Ablaufzeit greift ohnehin – als eine App, die sich beim Beenden aufhängt.
+  - **Der lokale Eintrag wird in jedem Fall gelöscht**, auch wenn der Widerruf scheitert. Einen Token zu behalten, den nach dem Beenden niemand mehr aufruft, würde in der Oberfläche nur einen Link vorspiegeln, der niemandem mehr gehört.
+  - Acht neue Tests decken genau die unangenehmen Fälle ab: kein Netz, Relay kennt den Token nicht, Verbindung antwortet nie.
+### Der schwerere zweite Fehler, beim Nachsehen gefunden
+
+Stephans Verdacht am 04.10.2026 – „ich kann den Live-Link aktivieren und in der App wieder deaktivieren, und das funktioniert wohl nicht" – traf zu, und zwar auf einen eigenständigen, schwerwiegenderen Fehler.
+
+`useShareLink` las Token und Status **nur aus den Anfangswerten von `useState`**. Die greifen aber ausschließlich beim ersten Rendern – und `useActiveHike` lädt die Tour in einem Effekt, beim ersten Rendern ist sie deshalb **immer** null. Kam sie einen Augenblick später mit einem laufenden Link herein, blieb der Hook auf `idle` und `token` auf null; `stop()` stieg bei `if (!hike || !token) return;` sofort wieder aus.
+
+**Betroffen war jeder, der den SOS-Bereich zwischendurch verlassen oder die App neu gestartet hatte.** Die Oberfläche zeigte dann gar keinen aktiven Link mehr – der Nutzer wusste also nicht einmal, dass es etwas abzuschalten gab.
+
+Die Ironie: Der Kommentar über dem Hook erklärte genau diese Gefahr („`hike` wird nach dem Start des Links nicht automatisch neu geladen und wäre beim Beenden veraltet"). Die Absicht war richtig, nur übersieht man leicht, dass `useState`-Anfangswerte nicht erneut ausgewertet werden.
+
+- [x] **Behoben am 04.10.2026** durch einen Abgleich-Effekt. Drei Feinheiten dabei:
+  - Übernommen wird nur, wenn der Hook selbst noch keinen Token hat – sonst überschriebe das veraltete `hike`-Objekt einen gerade frisch gestarteten Link.
+  - **Abgeschaltete Token werden gemerkt.** In diese Falle bin ich beim Bauen selbst gelaufen: Nach `stop()` trägt das hereingereichte Objekt noch eine Weile den alten Token, und der Abgleich hat ihn prompt wieder übernommen – der Link sah weiter aktiv aus, obwohl er widerrufen war. Ein Test hält das jetzt fest.
+  - Die Adresse wird aus dem Token rekonstruiert (`buildViewUrl`). Sie steht nicht in der Datenbank, und die Oberfläche blendet den Abschalt-Knopf ohne sie aus – ein übernommener Link wäre sonst weiterhin nicht abschaltbar gewesen.
+- [ ] **Noch ungeprüft am Gerät.** Beide Korrekturen sind durch 13 Tests abgedeckt, aber der Ablauf „Link starten, SOS verlassen, zurückkommen, abschalten" ist noch nicht am Handy durchgespielt.
+
 - [ ] Prüfen, ob ein verwaister Token sich auch ohne die App widerrufen lässt (Relay-Endpunkt `POST /api/track/:token/revoke` existiert und braucht keine Anmeldung – das ist einerseits der Notausgang, andererseits selbst eine Frage wert).
 - [ ] Überlegen, ob die Standardlaufzeit von sechs Stunden zu lang ist. Sie stammt aus der Annahme einer Tageswanderung; nach dem Fix wäre sie nur noch für den Fall relevant, dass die App beim Beenden kein Netz hat.
 
