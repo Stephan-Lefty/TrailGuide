@@ -26,12 +26,17 @@ export async function startLiveShare(hikeId: string, ttlMinutes: number): Promis
  * der Widerruf aus, weil kein Netz da ist, greift die feste Ablaufzeit des
  * Tokens - genau dafuer gibt es sie.
  */
-export async function stopLiveShare(hikeId: string, token: string): Promise<boolean> {
-  try {
-    return await revokeTrackLink(token);
-  } finally {
-    setShareLink(hikeId, null, null);
-  }
+export function stopLiveShare(hikeId: string, token: string): Promise<boolean> {
+  // Zuerst lokal vergessen, dann erst den Relay benachrichtigen. Die
+  // Reihenfolge ist der Kern: Der Aufrufer steht im Weg eines Nutzers, der
+  // gerade "Freigabe beenden" oder "Aktivität beenden" getippt hat, und der
+  // soll nicht auf das Netz warten.
+  //
+  // Wie wichtig das ist, zeigte der Geraetetest am 04.10.2026: Auf einem Netz
+  // mit kaputtem IPv6 brauchte schon der erste Relay-Aufruf fuenf Minuten.
+  // Solange darf nichts in der Oberflaeche haengen.
+  setShareLink(hikeId, null, null);
+  return revokeTrackLink(token);
 }
 
 export async function pushLocationToShare(token: string, location: RelayLocation): Promise<boolean> {

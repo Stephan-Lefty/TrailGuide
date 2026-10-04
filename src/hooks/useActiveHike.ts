@@ -153,14 +153,12 @@ export function useActiveHike() {
       const aktuell = getActiveHike();
       const token = aktuell?.id === hike.id ? aktuell.shareToken : hike.shareToken;
       if (token) {
-        try {
-          await stopLiveShare(hike.id, token);
-        } catch {
-          // Best-effort wie beim Tracking. Am Ende einer Bergtour ohne Netz
-          // dazustehen ist der Normalfall, und daran darf das Beenden nicht
-          // scheitern. Die feste Ablaufzeit des Tokens bleibt als letzte
-          // Rueckfallebene - sie ist der Grund, warum es sie gibt.
-        }
+        // Ohne await: stopLiveShare vergisst den Link sofort lokal und schickt
+        // den Widerruf nebenher los. Am Ende einer Bergtour ohne Netz
+        // dazustehen ist der Normalfall, und daran darf das Beenden einer
+        // Aktivitaet nicht haengenbleiben. Die feste Ablaufzeit des Tokens ist
+        // die Rueckfallebene, falls der Widerruf nicht ankommt.
+        void stopLiveShare(hike.id, token);
       }
 
       stopBatteryMonitoring();

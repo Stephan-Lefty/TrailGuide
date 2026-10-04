@@ -123,7 +123,10 @@ export function useShareLink(hike: Hike | null): UseShareLinkResult {
     // Vor dem Abschalten vormerken, nicht danach: Sonst koennte der Abgleich
     // oben in der Zwischenzeit zuschlagen und den Token wieder uebernehmen.
     abgeschaltet.current.add(token);
-    await stopLiveShare(hike.id, token);
+    // Bewusst ohne await: Der Widerruf laeuft nebenher weiter, die Oberflaeche
+    // reagiert sofort. Auf einem langsamen Netz haette der Nutzer sonst
+    // minutenlang vor einem toten Knopf gesessen.
+    void stopLiveShare(hike.id, token);
     setToken(null);
     setViewUrl(null);
     setExpiresAt(null);

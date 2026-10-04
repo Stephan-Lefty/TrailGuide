@@ -1,4 +1,9 @@
-import { REVOKE_TIMEOUT_MS, revokeTrackLink } from './relayApiClient';
+import {
+  CREATE_TIMEOUT_MS,
+  REVOKE_TIMEOUT_MS,
+  createTrackLink,
+  revokeTrackLink,
+} from './relayApiClient';
 
 const fetchMock = jest.fn();
 (globalThis as unknown as { fetch: jest.Mock }).fetch = fetchMock;
@@ -48,7 +53,47 @@ describe('revokeTrackLink', () => {
     jest.useRealTimers();
   });
 
-  it('haelt das Zeitlimit knapp genug, um niemanden warten zu lassen', () => {
-    expect(REVOKE_TIMEOUT_MS).toBeLessThanOrEqual(5000);
+  it('gibt dem Widerruf genug Zeit fuer eine traege erste Verbindung', () => {
+    // Der Wert stand einmal bei 5 Sekunden - zu knapp. Beim Geraetetest am
+    // 04.10.2026 brauchte der erste Relay-Aufruf auf einem Netz mit kaputtem
+    // IPv6 fuenf Minuten, und der Widerruf wurde jedes Mal abgewuergt. Da
+    // niemand auf ihn wartet, kostet ein grosszuegiges Limit nichts.
+    expect(REVOKE_TIMEOUT_MS).toBeGreaterThanOrEqual(30_000);
+  });
+
+  it('laesst niemanden endlos auf einen neuen Link warten', () => {
+    // Hier wartet jemand zu - der Knopf zeigt "Wird gestartet...". Ein Limit
+    // muss es also geben, und es muss kuerzer sein als die Geduld eines
+    // Menschen im Notfall.
+    expect(CREATE_TIMEOUT_MS).toBeGreaterThan(0);
+    expect(CREATE_TIMEOUT_MS).toBeLessThanOrEqual(30_000);
+  });
+});
+
+describe('createTrackLink', () => {
+  it('bricht ab, statt den Knopf endlos drehen zu lassen', async () => {
+    jest.useFakeTimers();
+    fetchMock.mockImplementation(
+      (_url: string, optionen: { signal: AbortSignal }) =>
+        new Promise((_, ablehnen) => {
+          optionen.signal.addEventListener('abort', () => ablehnen(new Error('Aborted')));
+        }),
+    );
+
+    const laeuft = createTrackLink(360);
+    jest.advanceTimersByTime(CREATE_TIMEOUT_MS);
+
+    // Anders als der Widerruf darf das Anlegen werfen - der Aufrufer faengt es
+    // ab und zeigt den Fehlerzustand, damit der Knopf wieder bedienbar wird.
+    await expect(laeuft).rejects.toThrow();
+    jest.useRealTimers();
+  });
+
+  it('liefert Token und Adresse, wenn der Relay antwortet', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ token: 'abc123', viewUrl: 'https://relay.example/view/abc123', expiresAt: 1 }),
+    });
+    await expect(createTrackLink(360)).resolves.toMatchObject({ token: 'abc123' });
   });
 });

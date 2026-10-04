@@ -27,16 +27,41 @@ export interface RelayLocation {
   stationarySince?: number | null;
 }
 
+/**
+ * So lange darf das Anlegen eines Live-Links hoechstens brauchen.
+ *
+ * Anders als beim Widerruf wartet hier jemand zu - der Knopf zeigt
+ * "Wird gestartet...". Ohne Limit dreht er sich endlos: Beim Geraetetest am
+ * 04.10.2026 stand er wegen des bei REVOKE_TIMEOUT_MS beschriebenen
+ * IPv6-Problems **fuenf Minuten** so da, ohne Rueckmeldung und ohne
+ * Abbruchmoeglichkeit. Der Link war am Ende sogar angelegt worden, nur hatte
+ * das niemand mehr mitbekommen.
+ *
+ * Nach dieser Zeit gilt der Versuch als gescheitert und der Knopf wird wieder
+ * bedienbar. Das ist die ehrlichere Antwort als ein Rad, das sich dreht: Wer
+ * es noch einmal versucht, hat gute Aussichten, weil die Verbindung dann in
+ * der Regel steht - die laufenden Standort-Uebertragungen liefen auf demselben
+ * Netz anschliessend ohne Auffaelligkeit.
+ */
+export const CREATE_TIMEOUT_MS = 20_000;
+
 export async function createTrackLink(ttlMinutes: number): Promise<CreateLinkResponse> {
-  const res = await fetch(`${RELAY_BASE_URL}/api/track/new`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ttlMinutes }),
-  });
-  if (!res.ok) {
-    throw new Error(`relay_create_failed: ${res.status}`);
+  const abbruch = new AbortController();
+  const wecker = setTimeout(() => abbruch.abort(), CREATE_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${RELAY_BASE_URL}/api/track/new`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ttlMinutes }),
+      signal: abbruch.signal,
+    });
+    if (!res.ok) {
+      throw new Error(`relay_create_failed: ${res.status}`);
+    }
+    return await res.json();
+  } finally {
+    clearTimeout(wecker);
   }
-  return res.json();
 }
 
 /** Gibt false zurueck (statt zu werfen), wenn der Push fehlschlaegt - ein einzelner verlorener Punkt soll das Tracking nicht unterbrechen. */
@@ -54,16 +79,6 @@ export async function pushTrackLocation(token: string, location: RelayLocation):
 }
 
 /**
- * So lange wird hoechstens auf den Widerruf gewartet.
- *
- * Seit 1.0.5 wird der Live-Link beim Beenden einer Aktivitaet widerrufen - und
- * damit haengt dieser Aufruf im Weg des Nutzers, der gerade "Aktivitaet
- * beenden" getippt hat. Ohne Zeitlimit wartet `fetch` am Ende einer Bergtour
- * ohne Netz unter Umstaenden eine Minute oder laenger, und solange stuende die
- * App. Lieber ein nicht widerrufener Token - dessen feste Ablaufzeit greift
- * ohnehin - als eine App, die sich beim Beenden aufhaengt.
- */
-/**
  * Die Adresse, unter der ein Token zu sehen ist.
  *
  * Normalerweise kommt sie beim Anlegen vom Relay zurueck. Gespeichert wird sie
@@ -75,11 +90,30 @@ export function buildViewUrl(token: string): string {
   return `${RELAY_BASE_URL}/view/${token}`;
 }
 
-export const REVOKE_TIMEOUT_MS = 5000;
+/**
+ * So lange darf der Widerruf hoechstens brauchen.
+ *
+ * Grosszuegig bemessen, weil er **niemanden warten laesst**: Die Oberflaeche
+ * vergisst den Link sofort und schickt den Widerruf nebenher los. Ein knappes
+ * Limit waere hier genau verkehrt - es wuergt den Widerruf ab, ohne irgendwem
+ * Zeit zu sparen.
+ *
+ * Der Wert stand zunaechst bei 5 Sekunden. Der Geraetetest am 04.10.2026 hat
+ * vorgefuehrt, warum das zu wenig ist: Auf dem Mobilfunknetz des Testgeraets
+ * war IPv6 vollstaendig unerreichbar (100 % Paketverlust), IPv4 dagegen bei
+ * 38 ms. Android loest den Relay-Namen als AAAA auf, laeuft ins Leere und
+ * faellt erst nach dem TCP-Timeout auf IPv4 zurueck. Der erste Aufruf brauchte
+ * dadurch fuenf Minuten - nach 5 Sekunden abzubrechen hiess schlicht: Der
+ * Widerruf kam nie an, und der Token lebte weiter.
+ */
+export const REVOKE_TIMEOUT_MS = 30_000;
 
 /**
- * Widerruft einen Live-Link. Wirft nie und wartet hoechstens
- * REVOKE_TIMEOUT_MS - beides, weil der Aufrufer im Beenden-Pfad steht.
+ * Widerruft einen Live-Link. Wirft nie.
+ *
+ * Der Aufrufer soll das Ergebnis **nicht abwarten muessen** - siehe
+ * stopLiveShare. Scheitert der Widerruf, bleibt die feste Ablaufzeit des
+ * Tokens als Rueckfallebene.
  */
 export async function revokeTrackLink(token: string): Promise<boolean> {
   const abbruch = new AbortController();
