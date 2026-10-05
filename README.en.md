@@ -62,7 +62,25 @@ cp wrangler.toml.example wrangler.toml
 npx wrangler kv namespace create LOCATION_KV   # enter the id in wrangler.toml
 npm run dev              # local development
 npm run deploy           # deploy to Cloudflare
+npm test                 # tests
+npm run typecheck        # TypeScript
 ```
+
+**Creating new links is rate limited:** at most 10 per hour per IP address
+([`server/src/lib/rateLimit.ts`](server/src/lib/rateLimit.ts)). The full
+reasoning is in the source; the short version: `POST /api/track/new` creates
+an entry without any authentication, and the relay's address sits in plain
+text inside the app — verified against the built package. Once the APK is
+directly downloadable, anyone can read it out.
+
+Two things about it are deliberate, not gaps: there is **no** global limit,
+because that could be triggered from outside and would then stop someone in
+trouble on a mountain from creating a live link at all — a Cloudflare bill is
+the lesser evil. And rejected requests are **not** counted, otherwise an
+attacker hammering away pushes the window back indefinitely and locks out the
+real user behind the same address (a real case on mobile networks with shared
+addresses). Workers KV is only eventually consistent, so a short burst can
+exceed the limit — for the purpose of protecting the quota, that is enough.
 
 ## Changelog
 

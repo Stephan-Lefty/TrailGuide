@@ -1,4 +1,5 @@
 import { createTrackEntry, deleteTrackEntry, getTrackEntry, updateTrackLocation } from './lib/kv';
+import { adresseAusAnfrage, pruefeUndZaehle } from './lib/rateLimit';
 import { generateToken } from './lib/token';
 import { renderTrackView } from './views/trackView';
 
@@ -9,10 +10,10 @@ export interface Env {
 const DEFAULT_TTL_MINUTES = 360; // 6 Stunden
 const MAX_TTL_MINUTES = 60 * 24; // 24 Stunden Obergrenze, auch wenn ein Client mehr anfragt
 
-function json(data: unknown, status = 200): Response {
+function json(data: unknown, status = 200, extraHeaders: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...extraHeaders },
   });
 }
 
@@ -28,6 +29,22 @@ export default {
 
     // POST /api/track/new
     if (pathname === '/api/track/new' && method === 'POST') {
+      // Begrenzung nur hier: Dieser Aufruf ist der einzige, der ohne
+      // Vorwissen einen neuen Eintrag anlegen kann. Die uebrigen Aufrufe
+      // brauchen einen gueltigen Token, den man nicht erraten kann - und das
+      // Senden von Standorten laeuft bei einer aktiven Freigabe alle zehn
+      // Sekunden, das darf nicht begrenzt werden.
+      const grenze = await pruefeUndZaehle(
+        env.LOCATION_KV,
+        adresseAusAnfrage(request),
+        Date.now(),
+      );
+      if (!grenze.erlaubt) {
+        return json({ error: 'rate_limited', retryAfter: grenze.wartenSekunden }, 429, {
+          'retry-after': String(grenze.wartenSekunden),
+        });
+      }
+
       let ttlMinutes = DEFAULT_TTL_MINUTES;
       try {
         const body = (await request.json()) as { ttlMinutes?: number };

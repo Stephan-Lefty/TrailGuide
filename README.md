@@ -62,7 +62,26 @@ cp wrangler.toml.example wrangler.toml
 npx wrangler kv namespace create LOCATION_KV   # ID in wrangler.toml eintragen
 npm run dev              # lokale Entwicklung
 npm run deploy           # Deployment zu Cloudflare
+npm test                 # Tests
+npm run typecheck        # TypeScript
 ```
+
+**Das Anlegen neuer Links ist begrenzt:** höchstens 10 pro Stunde und
+IP-Adresse ([`server/src/lib/rateLimit.ts`](server/src/lib/rateLimit.ts)).
+Der Grund steht ausführlich im Quelltext; die Kurzfassung: `POST
+/api/track/new` legt ohne Anmeldung einen Eintrag an, und die Adresse des
+Relays steckt im Klartext in der App – am gebauten Paket nachgeprüft. Sobald
+die APK direkt herunterladbar ist, kann sie jeder auslesen.
+
+Zwei Dinge sind dabei Absicht und keine Lücke: Es gibt **kein** globales
+Limit, weil das von außen auslösbar wäre und dann jemand in Bergnot keinen
+Live-Link mehr anlegen könnte – eine Cloudflare-Rechnung ist das kleinere
+Übel. Und abgewiesene Anfragen werden **nicht** mitgezählt, sonst schiebt ein
+Angreifer das Zeitfenster endlos nach hinten und sperrt den echten Nutzer
+hinter derselben Adresse mit aus (bei Mobilfunk mit geteilter Adresse ein
+realer Fall). Workers KV ist nur letztlich konsistent, ein kurzer Stoß kann
+das Limit also überschreiten – für den Zweck, das Kontingent zu schützen,
+genügt das.
 
 ## Änderungsprotokoll
 
