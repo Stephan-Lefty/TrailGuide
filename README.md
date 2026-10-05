@@ -68,6 +68,11 @@ npm run deploy           # Deployment zu Cloudflare
 
 Bezieht sich auf die Versionsnummer der App (`app.json`/`package.json`).
 
+### 1.0.6
+Keine Änderung an der App selbst, sondern an ihrer Größe: **Die APK ist von 104 auf 60 MB geschrumpft.** Das Paket enthielt jede native Bibliothek viermal – für arm64-v8a und armeabi-v7a (echte Telefone) und für x86 sowie x86_64 (Emulatoren und einzelne Chromebooks). Allein die beiden Intel-Varianten waren 43 MB. Über den Play Store fiel das nie auf, weil Google aus dem AAB passgenaue Pakete schneidet; wer die App dagegen als APK von naturlust.net lädt, zieht die ganze Datei – womöglich mit einem Balken Empfang am Wanderparkplatz.
+- **Der naheliegende Weg funktioniert hier nicht.** `ndk { abiFilters … }` in `app/build.gradle` blieb ohne jede Wirkung, zweimal gebaut und nachgemessen: erst im `release`-Block, dann in `defaultConfig`. Beide Male enthielt die APK unverändert alle vier Varianten. Bei einer gewöhnlichen Android-App greift `abiFilters` durchaus (DialOS Mobil macht es so) – bei React Native entscheidet das React-Native-Gradle-Plugin über die Eigenschaft `reactNativeArchitectures`, welche Bibliotheken überhaupt erst entstehen. Sie steht jetzt in `android/gradle.properties`, gesetzt vom Plugin [withNativeArchitectures.js](plugins/withNativeArchitectures.js), damit `expo prebuild` sie nicht wieder wegwirft.
+- **Nebenwirkung, offen benannt:** Auch Debug-Builds haben kein x86_64 mehr, der Android-Emulator läuft damit nicht. Die App wird ohnehin immer am echten Gerät getestet. Wer doch einen Emulator braucht: `./gradlew assembleDebug -PreactNativeArchitectures=x86_64`.
+
 ### 1.0.5
 Eine Rückfrage von Stephan nach der Radtour vom 04.10.2026 – „kann es sein, dass der Live-Standort immer noch geteilt wird?" – hat eine ganze Kette von Fehlern rund um den Live-Standort-Link aufgedeckt. Alle vier betrafen dasselbe Versprechen: dass eine Freigabe endet, wenn man sie beendet.
 - **Der Live-Link überlebte das Beenden der Aktivität.** Die Aufzeichnung stoppte, die Standortpunkte wurden gelöscht, der Tourkontakt entfernt – nur der Link blieb auf dem Server, bis seine Laufzeit ablief: standardmäßig sechs Stunden. Er zeigte weiter die zuletzt übertragene Position. Für eine App, die zusagt, nach einer normalen Tour bleibe nichts zurück, war das derselbe Widerspruch wie seinerzeit das Android-Cloud-Backup.

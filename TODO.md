@@ -2,6 +2,23 @@
 
 Offene Aufgaben und Ideen für NaturlustTrailGuide. Wird laufend ergänzt.
 
+## Verteilung außerhalb des Play Stores (Stand 05.10.2026)
+
+Ausgangsfrage von Stephan: „Wo wollen wir die App noch anbieten, damit jeder Android-Nutzer sie nutzen kann?" Geprüft wurden F-Droid, IzzyOnDroid, Accrescent, Uptodown, Aptoide, Huawei AppGallery, Samsung Galaxy Store und der direkte Download.
+
+- [ ] **Direkter Download auf naturlust.net.** Der wichtigste Weg, und derzeit sogar der einzige: Der geschlossene Test läuft noch, die Store-Adresse `play.google.com/store/apps/details?id=net.naturlust.trailguide` liefert **404**. Ohne Einladung kommt niemand an die App.
+  - [x] APK verkleinert: 104 → 60 MB (1.0.6, siehe Änderungsprotokoll)
+  - [ ] **Es muss die „Signierte universelle APK" aus der Play Console sein**, nicht unser eigener Build. Sie trägt den Play-Signaturschlüssel, den Google hält und nicht herausgibt. Nur damit lässt sich zwischen Homepage- und Store-Installation **ohne Deinstallieren** wechseln – genau der Datenverlust, der am 04.10.2026 die Notfallkontakte gekostet hat. Zu finden unter *Test und Veröffentlichung → Letzte Releases und App-Bundles → Alle App-Versionen → Downloads → Assets*.
+  - [ ] Auf der Seite dazu: SHA-256-Summe der Datei, Signatur-Fingerabdruck und eine Anleitung für „Installation aus unbekannter Quelle"
+- [ ] **Huawei AppGallery prüfen.** Der einzige Laden, der Nutzer erschließt, die wir sonst gar nicht erreichen – diese Geräte haben kein Play. Die App hängt an **keinen** Play Services (nachgeprüft: kein `play-services-*`, kein Firebase, keine Tracker), würde dort also tatsächlich laufen.
+- [ ] **Samsung Galaxy Store prüfen.** Größte Reichweite nach Play in Deutschland, und der Galaxy Store macht Googles Entwickler-Verifizierung mit, bleibt also zukunftssicher. Mit der Play-signierten APK bleibt die Signatur überall dieselbe.
+- [x] **IzzyOnDroid: fällt rechnerisch durch.** Die Richtlinie nennt **30 MB pro App** als Obergrenze. Selbst nach dem Verkleinern sind es 60 MB. Keine Verhandlungssache, sondern eine Zahl.
+- [x] **F-Droid: nicht jetzt.** Drei Gründe, jeder allein schon schwer: Das **Repo ist privat** (müsste öffentlich werden), F-Droid baut aus dem Quelltext und bekommt Expo/React Native nur mit erheblichem Aufwand reproduzierbar, und F-Droid **signiert selbst** – anderer Fingerabdruck, also wieder Deinstallieren. Dazu kommt, dass F-Droid öffentlich erklärt hat, dass Googles Registrierungspflicht genau ihr Modell trifft: rund 85 % ihres Katalogs hängt an ihrer eigenen Signatur-Infrastruktur.
+- [x] **Accrescent: später.** Passt technisch (128 MiB Grenze, Domain-Nachweis über naturlust.net wäre machbar), aber die Anmeldung läuft nur auf Freischaltung und die Reichweite ist noch sehr klein.
+- [x] **Aptoide und Uptodown: verworfen.** Bringen keine neuen Nutzer, sondern nur ein zweites, mit der Zeit veraltendes Exemplar der App in Umlauf. Bei einer Sicherheits-App ist das ein Risiko ohne Gegenwert.
+
+**Der Zeitdruck dahinter:** Googles Entwickler-Verifizierung ist seit **30.09.2026** in Brasilien, Indonesien, Singapur und Thailand aktiv und kommt **2027 global auf alle zertifizierten Geräte**. Danach lässt sich eine App nur noch normal installieren, wenn Paketname **und Signatur-Fingerabdruck** unter einer verifizierten Entwickler-Identität registriert sind. Beide Paketnamen sind seit August registriert – aber eben mit dem Play-Signaturschlüssel. Das ist das zweite, stärkere Argument dafür, die Homepage-APK aus der Play Console zu nehmen statt selbst zu signieren. **Noch nicht gegengeprüft:** ob sich zu einem Paketnamen auch ein zweiter Signaturschlüssel registrieren lässt.
+
 ## Play-Store-Veröffentlichung
 
 - [x] Echten Release-Keystore erzeugen und Signierung umstellen (statt Debug-Keystore)

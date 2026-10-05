@@ -68,6 +68,11 @@ npm run deploy           # deploy to Cloudflare
 
 Refers to the app's version number (`app.json`/`package.json`).
 
+### 1.0.6
+No change to the app itself, but to its size: **the APK shrank from 104 to 60 MB.** The package contained every native library four times over — for arm64-v8a and armeabi-v7a (real phones) and for x86 and x86_64 (emulators and a few Chromebooks). The two Intel variants alone accounted for 43 MB. This never showed over the Play Store, because Google cuts tailored packages from the AAB; whoever downloads the app as an APK from naturlust.net, however, pulls the whole file — possibly on one bar of reception at a trailhead car park.
+- **The obvious route does not work here.** `ndk { abiFilters … }` in `app/build.gradle` had no effect whatsoever, built and measured twice: first in the `release` block, then in `defaultConfig`. Both times the APK still contained all four variants. For an ordinary Android app `abiFilters` does work (DialOS Mobil does it that way) — but with React Native it is the React Native Gradle plugin that decides, via the `reactNativeArchitectures` property, which libraries get built at all. It now lives in `android/gradle.properties`, set by the plugin [withNativeArchitectures.js](plugins/withNativeArchitectures.js) so that `expo prebuild` cannot discard it again.
+- **Side effect, stated openly:** debug builds no longer carry x86_64 either, so the Android emulator will not run. The app is always tested on the real device anyway. If you do need an emulator: `./gradlew assembleDebug -PreactNativeArchitectures=x86_64`.
+
 ### 1.0.5
 A question from Stephan after the bike tour of 04.10.2026 — "could it be that my live location is still being shared?" — uncovered a whole chain of defects around the live location link. All four concerned the same promise: that a share ends when you end it.
 - **The live link survived ending the activity.** Recording stopped, the track points were deleted, the tour contact was removed — only the link stayed on the server until its lifetime ran out: six hours by default. It kept showing the last transmitted position. For an app that promises nothing is left behind after a normal tour, that was the same contradiction as the Android cloud backup once was.
