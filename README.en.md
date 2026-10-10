@@ -10,6 +10,35 @@ More info, the full write-up, and a contact form: **[naturlust.net/trailguide-ap
 
 ---
 
+## Installing on your phone
+
+The built file is attached to the [releases][rel] — signed by Google, so it is
+the same file the testers get through the Play Store.
+
+Nobody wants to type a link like that on a phone, which is what the code is for.
+Point your camera at it and the download starts:
+
+<img src="assets/install-qr.png" alt="QR code leading to the latest NaturlustTrailGuide release" width="180">
+
+On a computer, this link always points at the newest version:
+
+```
+https://github.com/Stephan-Lefty/TrailGuide/releases/latest
+```
+
+The first time, Android asks whether this browser is allowed to install apps.
+That is the normal question for anything that does not come from the Play Store.
+
+> **The step-by-step guide is German only so far.** It lives at
+> [naturlust.net/trailguide-app](https://naturlust.net/trailguide-app/) and
+> covers the install screens in the order they appear, the space needed, and
+> what each error message means. An English version is still missing — until
+> then the code above leads to the file rather than to instructions.
+
+[rel]: https://github.com/Stephan-Lefty/TrailGuide/releases
+
+---
+
 ## Core principle
 
 Start an activity and the app records your location in the background — even with the screen locked. Get back safely, and one tap deletes all recorded location data immediately. No movement history accumulates over time. Only if something actually happened do you actively choose to keep the data.

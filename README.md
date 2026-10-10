@@ -10,6 +10,33 @@ Mehr Infos, der vollständige Erklärtext und ein Kontaktformular: **[naturlust.
 
 ---
 
+## Auf dem Handy installieren
+
+Die fertige Datei liegt bei den [Veröffentlichungen][rel] – von Google signiert,
+also dieselbe Datei, die die Tester über den Play Store bekommen.
+
+So einen Link am Handy abzutippen will niemand, dafür ist der Code da.
+Abfotografieren, und das Handy landet bei der Anleitung:
+
+<img src="assets/installieren-qr.png" alt="Strichcode, der zur Installationsanleitung für NaturlustTrailGuide führt" width="180">
+
+**Warum der Code zur Anleitung führt und nicht direkt zur Datei:** Beim
+Installieren fragt Android, ob dieser Browser Programme installieren darf. Das
+ist die normale Rückfrage bei allem, was nicht aus dem Play Store kommt – aber
+wer nur die Datei bekommt, steht ohne Erklärung davor. Auf der Seite stehen die
+Schritte in der Reihenfolge, in der sie am Gerät auftauchen, dazu der
+Platzbedarf und die Fehlermeldungen samt Bedeutung.
+
+Am Rechner geht es ohne Umweg; dieser Link zeigt immer auf die neueste Fassung:
+
+```
+https://github.com/Stephan-Lefty/TrailGuide/releases/latest
+```
+
+[rel]: https://github.com/Stephan-Lefty/TrailGuide/releases
+
+---
+
 ## Grundprinzip
 
 Startest du eine Aktivität, zeichnet die App im Hintergrund deinen Standort auf – auch bei gesperrtem Display. Kommst du sicher zurück, werden mit einem Klick alle Standortdaten sofort gelöscht. Es sammelt sich also **keine Bewegungshistorie** an. Nur wenn tatsächlich ein Vorfall vorlag, entscheidest du dich bewusst dafür, die Daten zu behalten.
